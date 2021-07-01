@@ -171,7 +171,7 @@ def standardGraphFile(dataset):
    # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
 
     RFC = RandomForestClassifier()
-    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=2, n_jobs=1)
+    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=10, n_jobs=1)
    # grid = RandomizedSearchCV(estimator=RFC, param_distributions=Param_Grid, cv=2, n_jobs=4)
     grid.fit(Train_features, Train_labels)
     param_choose = grid.best_params_
