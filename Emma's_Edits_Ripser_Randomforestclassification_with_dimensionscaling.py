@@ -187,7 +187,6 @@ def standardGraphFile(dataset):
     print(accuracy_score(Test_labels, Test_pred), file=outputFile)
     print(f'Time taken to run:{time() - start} seconds', file=outputFile)
 
-    outputFile.close()  # close output file
 
 if __name__ == '__main__':
     # runs standardGraphFile for all datasets
@@ -195,3 +194,4 @@ if __name__ == '__main__':
     for dataset in sets:
         print(dataset, file=outputFile)
         standardGraphFile(dataset)
+    outputFile.close()  # close output file
