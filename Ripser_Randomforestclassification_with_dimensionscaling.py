@@ -168,24 +168,41 @@ def standardGraphFile(dataset):
     bootstrap = [True, False]
     Param_Grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
-   # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
 
     RFC = RandomForestClassifier()
     grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=10, n_jobs=1)
-   # grid = RandomizedSearchCV(estimator=RFC, param_distributions=Param_Grid, cv=2, n_jobs=4)
     grid.fit(Train_features, Train_labels)
     param_choose = grid.best_params_
    # print(param_choose, file=outputFile)
 
-
-
     RFC_pred = RandomForestClassifier(**param_choose, random_state=1).fit(Train_features, Train_labels)
     Test_pred = RFC_pred.predict(Test_features)
 
+    # PREDICTION PROBABILITIES
+    r_probs = [0 for _ in range(len(Test_labels))]  # worst case scenario
+    RFC_probs = (RFC_pred.predict_proba(Test_features))[:,1]  # predict the class probabilities for K_test and keep the positive outcomes
+    r_auc = roc_auc_score(Test_labels, r_probs) # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
+    RFC_auc = roc_auc_score(Test_labels, RFC_probs)  # Compute area under the receiver operating characteristic curve for RandomForest
+
+    print('Random prediction: AUROC = %.3f' % (r_auc), file=outputFile)
+    print('RFC: AUROC = %.3f' % (RFC_auc), file=outputFile)
     print(accuracy_score(Test_labels, Test_pred), file=outputFile)
     print(f'Time taken to run:{time() - start} seconds', file=outputFile)
 
+    r_fpr, r_tpr, thresholds = roc_curve(Test_labels, r_probs)
+    RFC_fpr, RFC_tpr, thresholds = roc_curve(Test_labels, RFC_probs)  # compute ROC
+    #RFAC_auc = auc(RFC_fpr, RFC_tpr) #basically does the same thing as RFC_auc
 
+    plt.figure(figsize=(3, 3), dpi=100)
+    plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
+    plt.plot(RFC_fpr, RFC_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % RFC_auc)
+    plt.title('ROC Plot')  # title
+    plt.xlabel('False Positive Rate')  # x-axis label
+    plt.ylabel('True Positive Rate')  # y-axis label
+    plt.legend()  # show legend
+    plt.show()  # show plot
+
+    
 if __name__ == '__main__':
     # runs standardGraphFile for all datasets
     sets = ['BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'FRANKENSTEIN', 'PROTEINS']
