@@ -18,6 +18,8 @@ import math
 from plotly import graph_objs as go
 from time import time
 
+# prepare file for printing
+outputFile = open('Ripser_RFC_w_dim_scaling_output.txt', 'w') # can rename
 
 def standardGraphFile(dataset):
     start = time()
@@ -169,21 +171,25 @@ def standardGraphFile(dataset):
    # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
 
     RFC = RandomForestClassifier()
-    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=2, n_jobs=1)
+    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=10, n_jobs=1)
    # grid = RandomizedSearchCV(estimator=RFC, param_distributions=Param_Grid, cv=2, n_jobs=4)
     grid.fit(Train_features, Train_labels)
     param_choose = grid.best_params_
-   # print(param_choose)
+   # print(param_choose, file=outputFile)
 
 
 
     RFC_pred = RandomForestClassifier(**param_choose, random_state=1).fit(Train_features, Train_labels)
     Test_pred = RFC_pred.predict(Test_features)
 
-    print(accuracy_score(Test_labels, Test_pred))
-    print(f'Time taken to run:{time() - start} seconds')
+    print(accuracy_score(Test_labels, Test_pred), file=outputFile)
+    print(f'Time taken to run:{time() - start} seconds', file=outputFile)
 
 
 if __name__ == '__main__':
-    dataset = 'BZR'
-    standardGraphFile(dataset) 
+    # runs standardGraphFile for all datasets
+    sets = ['BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'FRANKENSTEIN', 'PROTEINS']
+    for dataset in sets:
+        print(dataset, file=outputFile)
+        standardGraphFile(dataset)
+    outputFile.close()  # close output file
