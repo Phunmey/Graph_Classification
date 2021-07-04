@@ -17,9 +17,9 @@ from sklearn.decomposition import PCA
 import math
 from plotly import graph_objs as go
 from time import time
+import csv
 
-# prepare file for printing
-outputFile = open('Ripser_RFC_w_dim_scaling_output.txt', 'w') # can rename
+
 
 def standardGraphFile(dataset):
     start = time()
@@ -173,7 +173,6 @@ def standardGraphFile(dataset):
     grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=10, n_jobs=1)
     grid.fit(Train_features, Train_labels)
     param_choose = grid.best_params_
-   # print(param_choose, file=outputFile)
 
     RFC_pred = RandomForestClassifier(**param_choose, random_state=1).fit(Train_features, Train_labels)
     Test_pred = RFC_pred.predict(Test_features)
@@ -183,11 +182,6 @@ def standardGraphFile(dataset):
     RFC_probs = (RFC_pred.predict_proba(Test_features))[:,1]  # predict the class probabilities for K_test and keep the positive outcomes
     r_auc = roc_auc_score(Test_labels, r_probs) # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
     RFC_auc = roc_auc_score(Test_labels, RFC_probs)  # Compute area under the receiver operating characteristic curve for RandomForest
-
-    print('Random prediction: AUROC = %.3f' % (r_auc), file=outputFile)
-    print('RFC: AUROC = %.3f' % (RFC_auc), file=outputFile)
-    print(accuracy_score(Test_labels, Test_pred), file=outputFile)
-    print(f'Time taken to run:{time() - start} seconds', file=outputFile)
 
     r_fpr, r_tpr, thresholds = roc_curve(Test_labels, r_probs)
     RFC_fpr, RFC_tpr, thresholds = roc_curve(Test_labels, RFC_probs)  # compute ROC
@@ -203,10 +197,16 @@ def standardGraphFile(dataset):
     plt.show()  # show plot
 
     
+    
+    tsv_writer.writerow([dataset, '%.3f' % r_auc, '%.3f' % RFC_auc, accuracy_score(Test_labels, Test_pred), time() - start])  # if you want more output you must include here and update column names
+
+    
 if __name__ == '__main__':
-    # runs standardGraphFile for all datasets
     sets = ['BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'FRANKENSTEIN', 'PROTEINS']
-    for dataset in sets:
-        print(dataset, file=outputFile)
-        standardGraphFile(dataset)
-    outputFile.close()  # close output file
+    with open('Ripser_RFC_w_dim_scaling_output.tsv', 'wt') as out_file: #opens output file
+        tsv_writer = csv.writer(out_file, delimiter='\t') #makes output file into a tsv
+        tsv_writer.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)', 'accuracy_score(Test_labels,test_pred)', 'run_time']) # column names: if you want more output you must create a column name here
+        # runs standardGraphFile for all datasets
+        for dataset in sets:
+            standardGraphFile(dataset)
+
