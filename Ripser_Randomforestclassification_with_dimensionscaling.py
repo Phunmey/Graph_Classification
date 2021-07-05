@@ -202,7 +202,7 @@ def standardGraphFile(dataset):
     plt.legend()  # show legend
     plt.show()  # show plot
 
-    
+
 if __name__ == '__main__':
     # runs standardGraphFile for all datasets
     sets = ['BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'FRANKENSTEIN', 'PROTEINS']
