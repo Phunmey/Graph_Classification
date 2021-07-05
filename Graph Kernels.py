@@ -45,7 +45,6 @@ def standardGraphFile(dataset):
         edges_nodes = [edges_loc_asset, ext]
         DATA.append(edges_nodes)
 
-    # labels = sum((graphlabels_asdf.values.tolist()),[])
     G_train, G_test, y_train, y_test = train_test_split(DATA, graphlabels_aslist, test_size=0.2, random_state=42)
 
     WL = WeisfeilerLehman(n_iter=4, base_graph_kernel=VertexHistogram, normalize=True)
@@ -60,13 +59,14 @@ def standardGraphFile(dataset):
     RFC_probs = (RFC_pred.predict_proba(K_test))[:,
                 1]  # predict the class prob. for K_test and keep the positive outcomes
     r_auc = roc_auc_score(y_test, r_probs)
-    RFC_auc = roc_auc_score(y_test, RFC_probs)  # Compute area under the receiver operating characteristic curve
+    RFC_auc = roc_auc_score(y_test, RFC_probs)  # Compute AUROC scores
 
     print('Random prediction: AUROC = %.3f' % (r_auc))
     print('RFC: AUROC = %.3f' % (RFC_auc))
     print(accuracy_score(y_test, y_pred))
     print(f'Time taken to run:{time() - start} seconds')
 
+    #PLOTTING THE ROC_CURVE
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_probs, pos_label=2)
     RFC_fpr, RFC_tpr, thresholds = roc_curve(y_test, RFC_probs, pos_label=2)  # compute ROC
     # RFAC_auc = auc(RFC_fpr, RFC_tpr)
