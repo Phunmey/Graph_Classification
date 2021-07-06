@@ -62,6 +62,10 @@ def standardGraphFile(dataset):
     print(accuracy_score(y_test, y_pred))
     print(f'Time taken to run:{time() - start} seconds')
 
+    plot_roc_curve(y_test, r_probs, RFC_probs, r_auc, RFC_auc)
+
+
+def plot_roc_curve(y_test, r_probs, RFC_probs, r_auc, RFC_auc):
     #PLOTTING THE ROC_CURVE
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_probs, pos_label=2)
     RFC_fpr, RFC_tpr, thresholds = roc_curve(y_test, RFC_probs, pos_label=2)  # compute ROC
