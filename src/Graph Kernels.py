@@ -16,7 +16,7 @@ from grakel.kernels import WeisfeilerLehman, VertexHistogram
 
 def standardGraphFile(dataset):
     start = time()
-    datapath = "C:/Users/Mary/Documents/TDA_codes"
+    datapath = "../data"
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
     edges_asdf.columns = ['from', 'to']
     unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
