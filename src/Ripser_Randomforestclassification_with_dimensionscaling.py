@@ -207,7 +207,7 @@ def standardGraphFile(dataset):
 >>>>>>> a2aa5094b0ad84077814ae0f2b2ac10c50bd6023
 if __name__ == '__main__':
     sets = ['BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'FRANKENSTEIN', 'PROTEINS']
-    with open('Ripser_RFC_w_dim_scaling_output.tsv', 'wt') as out_file: #opens output file
+    with open('../results/Ripser_RFC_w_dim_scaling_output.tsv', 'wt') as out_file: #opens output file
         tsv_writer = csv.writer(out_file, delimiter='\t') #makes output file into a tsv
         tsv_writer.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)', 'accuracy_score(Test_labels,test_pred)', 'run_time']) # column names: if you want more output you must create a column name here
         # runs standardGraphFile for all datasets
