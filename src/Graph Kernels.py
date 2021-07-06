@@ -16,20 +16,16 @@ from grakel.kernels import WeisfeilerLehman, VertexHistogram
 
 def standardGraphFile(dataset):
     start = time()
-    datapath = "../data"
-    edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
+    edges_asdf = get_read_csv(dataset, "_A.txt")
     edges_asdf.columns = ['from', 'to']
     unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
     missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
                      x not in unique_nodes]  # find the missing nodes
     node_list = unique_nodes + missing_nodes
     node_list.sort()
-    graphindicator_aslist = sum((pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt",
-                                             header=None).values.tolist()), [])
-    graphlabels_aslist = sum(
-        (pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None).values.tolist()), [])
-    nodelabels_aslist = sum(
-        (pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_node_labels.txt", header=None).values.tolist()), [])
+    graphindicator_aslist = get_csv_value_sum(dataset, "_graph_indicator.txt")
+    graphlabels_aslist = get_csv_value_sum(dataset, "_graph_labels.txt")
+    nodelabels_aslist = get_csv_value_sum(dataset, "_node_labels.txt")
     nodes_dict = dict(zip(node_list, nodelabels_aslist))
     unique_graphindicator = list(set(graphindicator_aslist))
 
@@ -79,6 +75,15 @@ def standardGraphFile(dataset):
     plt.ylabel('True Positive Rate')  # y-axis label
     plt.legend()  # show legend
     plt.show()  # show plot
+
+
+def get_read_csv (dataset, extension):
+    path = "../data"
+    return pd.read_csv(path + "/" + dataset + "/" + dataset + extension, header=None)
+
+
+def get_csv_value_sum(dataset, extension):
+    return sum((get_read_csv(dataset, extension).values.tolist()), [])
 
 
 if __name__ == '__main__':
