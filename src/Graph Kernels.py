@@ -16,30 +16,8 @@ from grakel.kernels import WeisfeilerLehman, VertexHistogram
 
 def standardGraphFile(dataset):
     start = time()
-    edges_asdf = get_read_csv(dataset, "_A.txt")
-    edges_asdf.columns = ['from', 'to']
-    unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
-    missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
-                     x not in unique_nodes]  # find the missing nodes
-    node_list = unique_nodes + missing_nodes
-    node_list.sort()
-    graphindicator_aslist = get_csv_value_sum(dataset, "_graph_indicator.txt")
-    graphlabels_aslist = get_csv_value_sum(dataset, "_graph_labels.txt")
-    nodelabels_aslist = get_csv_value_sum(dataset, "_node_labels.txt")
-    nodes_dict = dict(zip(node_list, nodelabels_aslist))
-    unique_graphindicator = list(set(graphindicator_aslist))
 
-    DATA = []
-    for i in unique_graphindicator:
-        graphid = i
-        graphid_loc = [index for index, element in enumerate(graphindicator_aslist) if element == graphid]
-        edges_loc = edges_asdf[edges_asdf.index.isin(graphid_loc)]
-        edges_loc_asset = (edges_loc.to_records(index=False)).tolist()
-        nodes_aslist = ((edges_loc['from'].append(edges_loc['to'])).unique()).tolist()
-        ext = {k: nodes_dict[k] for k in nodes_aslist if k in nodes_dict}
-        # empty_dict = dict()
-        edges_nodes = [edges_loc_asset, ext]
-        DATA.append(edges_nodes)
+    DATA, graphlabels_aslist = get_data_and_labels(dataset)
 
     G_train, G_test, y_train, y_test = train_test_split(DATA, graphlabels_aslist, test_size=0.2, random_state=42)
 
@@ -66,7 +44,7 @@ def standardGraphFile(dataset):
 
 
 def plot_roc_curve(y_test, r_probs, RFC_probs, r_auc, RFC_auc):
-    #PLOTTING THE ROC_CURVE
+    # PLOTTING THE ROC_CURVE
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_probs, pos_label=2)
     RFC_fpr, RFC_tpr, thresholds = roc_curve(y_test, RFC_probs, pos_label=2)  # compute ROC
     # RFAC_auc = auc(RFC_fpr, RFC_tpr)
@@ -88,6 +66,35 @@ def get_read_csv (dataset, extension):
 
 def get_csv_value_sum(dataset, extension):
     return sum((get_read_csv(dataset, extension).values.tolist()), [])
+
+
+def get_data_and_labels(dataset):
+    edges_asdf = get_read_csv(dataset, "_A.txt")
+    edges_asdf.columns = ['from', 'to']
+    unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
+    missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
+                     x not in unique_nodes]  # find the missing nodes
+    node_list = unique_nodes + missing_nodes
+    node_list.sort()
+    graphindicator_aslist = get_csv_value_sum(dataset, "_graph_indicator.txt")
+    graphlabels_aslist = get_csv_value_sum(dataset, "_graph_labels.txt")
+    nodelabels_aslist = get_csv_value_sum(dataset, "_node_labels.txt")
+    nodes_dict = dict(zip(node_list, nodelabels_aslist))
+    unique_graphindicator = list(set(graphindicator_aslist))
+
+    DATA = []
+    for i in unique_graphindicator:
+        graphid = i
+        graphid_loc = [index for index, element in enumerate(graphindicator_aslist) if element == graphid]
+        edges_loc = edges_asdf[edges_asdf.index.isin(graphid_loc)]
+        edges_loc_asset = (edges_loc.to_records(index=False)).tolist()
+        nodes_aslist = ((edges_loc['from'].append(edges_loc['to'])).unique()).tolist()
+        ext = {k: nodes_dict[k] for k in nodes_aslist if k in nodes_dict}
+        # empty_dict = dict()
+        edges_nodes = [edges_loc_asset, ext]
+        DATA.append(edges_nodes)
+
+    return DATA, graphlabels_aslist
 
 
 if __name__ == '__main__':
