@@ -23,7 +23,7 @@ import csv
 
 def standardGraphFile(dataset):
     start = time()
-    datapath = "C:/Users/Mary/Documents/TDA_codes"
+    datapath = "../data"
     edgedata = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
     edgedata.columns = ['from', 'to']
     graphlabels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt",

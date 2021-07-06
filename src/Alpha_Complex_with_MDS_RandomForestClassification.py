@@ -16,7 +16,7 @@ from numpy import inf
 
 
 def standardGraphFile(dataset):
-    datapath = "C:/Users/Admin/OneDrive/Desktop/Pycharm"
+    datapath = "../data"
     edgedata = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
     edgedata.columns = ['from', 'to']
     graphlabels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt",
