@@ -11,8 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve, auc
 from plotly import graph_objs as go
 from time import time
-from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment, ShortestPath, \
-    ShortestPathAttr, CoreFramework, NeighborhoodSubgraphPairwiseDistance, RandomWalk
+from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment, ShortestPath
 
 
 def standardGraphFile(dataset):
