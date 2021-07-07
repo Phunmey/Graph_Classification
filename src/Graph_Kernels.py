@@ -11,7 +11,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve, auc
 from plotly import graph_objs as go
 from time import time
-from grakel.kernels import WeisfeilerLehman, VertexHistogram
+from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment, ShortestPath, \
+    ShortestPathAttr, CoreFramework, NeighborhoodSubgraphPairwiseDistance, RandomWalk
 
 
 def standardGraphFile(dataset):
@@ -43,7 +44,6 @@ def get_data_and_labels(dataset):
         edges_loc_asset = (edges_loc.to_records(index=False)).tolist()
         nodes_aslist = ((edges_loc['from'].append(edges_loc['to'])).unique()).tolist()
         ext = {k: nodes_dict[k] for k in nodes_aslist if k in nodes_dict}
-        # empty_dict = dict()
         edges_nodes = [edges_loc_asset, ext]
         DATA.append(edges_nodes)
 
