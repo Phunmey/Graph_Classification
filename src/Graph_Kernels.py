@@ -41,8 +41,8 @@ def get_data_and_labels(data_set):
     data = []
     for i in unique_graph_indicator:
         graph_id = i
-        graph_id_loc = [index for index, element in enumerate(graph_indicators)
-                       if element == graph_id]
+        graph_id_loc = [index for index, element in enumerate(graph_indicators) if
+                        element == graph_id]
         edges_loc = edges[edges.index.isin(graph_id_loc)]
         edges_loc_asset = (edges_loc.to_records(index=False)).tolist()
         node_list = ((edges_loc['from'].append(edges_loc['to'])).unique()).tolist()
