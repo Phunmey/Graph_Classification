@@ -71,8 +71,8 @@ def perform_rfc(data, graph_labels, start):
 
     # PREDICTION PROBABILITIES
     r_prob = [0 for _ in range(len(y_test))]  # worst case scenario
-    rfc_prob = (rfc_pred.predict_proba(k_test))[:,
-                1]  # predict the class prob. for k_test and keep the positive outcomes
+    # predict the class prob. for k_test and keep the positive outcomes
+    rfc_prob = (rfc_pred.predict_proba(k_test))[:, 1]
     r_auc = roc_auc_score(y_test, r_prob)
     rfc_auc = roc_auc_score(y_test, rfc_prob)  # Compute AUROC scores
 
@@ -87,12 +87,12 @@ def perform_rfc(data, graph_labels, start):
 def plot_roc_curve(y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     # PLOTTING THE ROC_CURVE
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_prob, pos_label=2)
-    rfc_fpr, RFC_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=2)  # compute ROC
-    # rfac_auc = auc(rfc_fpr, RFC_tpr)
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=2)  # compute ROC
+    # rfac_auc = auc(rfc_fpr, rfc_tpr)
 
     plt.figure(figsize=(4, 4), dpi=100)
     plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
-    plt.plot(rfc_fpr, RFC_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % rfc_auc)
+    plt.plot(rfc_fpr, rfc_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % rfc_auc)
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
