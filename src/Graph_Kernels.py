@@ -1,17 +1,21 @@
-import numpy as np
-from ripser import ripser
-from persim import plot_diagrams
 import pandas as pd
-from pandas import DataFrame
-from igraph import *
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve, auc
-from plotly import graph_objs as go
 from time import time
 from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment, ShortestPath
+
+"""
+UNUSED IMPORTS:
+    import numpy as np
+    from ripser import ripser
+    from persim import plot_diagrams
+    from pandas import DataFrame
+    from igraph import *
+    from matplotlib.pyplot import figure
+    from plotly import graph_objs as go
+"""
 
 
 def standard_graph_file(data_set):
