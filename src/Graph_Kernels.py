@@ -21,7 +21,7 @@ UNUSED IMPORTS:
 def standard_graph_file(data_set):
     start = time()
     data, graph_labels = get_data_and_labels(data_set)
-    perform_rfc(data, graph_labels, start)
+    perform_rfc(data_set, data, graph_labels, start)
 
 
 def get_data_and_labels(data_set):
@@ -62,7 +62,7 @@ def get_csv_value_sum(data_set, extension):
     return sum((get_read_csv(data_set, extension).values.tolist()), [])
 
 
-def perform_rfc(data, graph_labels, start):
+def perform_rfc(data_set, data, graph_labels, start):
     g_train, g_test, y_train, y_test = train_test_split(data, graph_labels,
                                                         test_size=0.2, random_state=42)
 
@@ -85,10 +85,10 @@ def perform_rfc(data, graph_labels, start):
     print(accuracy_score(y_test, y_pred))
     print(f'Time taken to run:{time() - start} seconds')
 
-    plot_roc_curve(y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
 
-def plot_roc_curve(y_test, r_prob, rfc_prob, r_auc, rfc_auc):
+def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     # PLOTTING THE ROC_CURVE
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_prob, pos_label=2)
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=2)  # compute ROC
@@ -101,12 +101,19 @@ def plot_roc_curve(y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
     plt.legend()  # show legend
+    plt.savefig("../results/Graph_Kernels/plots/" + data_set + ".png")  # save the plot
     plt.show()  # show plot
 
 
 if __name__ == '__main__':
-    dataset = 'PROTEINS'
-    standard_graph_file(dataset)
+    # removed "ENZYMES" and "FIRSTMM_DB" as they both have an error appear
+    datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]
+    for dataset in datasets:
+        print("Working on: " + dataset)
+        standard_graph_file(dataset)
+        print()
+
+    print("End of processing.")
 
     # TO DO:
     # GridsearchCV documentation and output tab separated files for Emma
