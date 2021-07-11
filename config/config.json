@@ -1,8 +1,22 @@
 {
-  "global": {
-
-  },
   "dataset": {
+    "BZR": {
 
+    },
+    "COX2": {
+
+    },
+    "DHFR": {
+
+    },
+    "ENZYMES": {
+
+    },
+    "FIRSTMM_DB": {
+
+    },
+    "PROTEINS": {
+
+    }
   }
 }
