@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import gudhi as gd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.manifold import MDS, TSNE
 from numpy import inf
 from sklearn.preprocessing import StandardScaler
