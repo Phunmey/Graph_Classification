@@ -1,2 +1,2 @@
-dataset	Random_prediction_(AUROC)	RFC_(AUROC)	accuracy_score	run_time
-PROTEINS	Weisfeiler Lehman	0.500	0.795	0.7174887892376681	19.189603090286255
+dataset	kernel	Random_prediction_(AUROC)	RFC_(AUROC)	accuracy_score	run_time
+PROTEINS	Weisfeiler Lehman	0.500	0.808	0.7219730941704036	19.74466586112976

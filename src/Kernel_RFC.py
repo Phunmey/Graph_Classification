@@ -27,8 +27,8 @@ def get_kernels():
 
 def get_data_and_labels(data_set):
     edges = get_read_csv(data_set, "_A.txt")
-    edges.columns = ['from', 'to']
-    unique_nodes = ((edges['from'].append(edges['to'])).unique()).tolist()
+    edges.columns = ["from", "to"]
+    unique_nodes = ((edges["from"].append(edges["to"])).unique()).tolist()
     missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
                      x not in unique_nodes]  # find the missing nodes
     nodes = unique_nodes + missing_nodes
@@ -46,7 +46,7 @@ def get_data_and_labels(data_set):
                         element == graph_id]
         edges_loc = edges[edges.index.isin(graph_id_loc)]
         edges_loc_asset = (edges_loc.to_records(index=False)).tolist()
-        node_list = ((edges_loc['from'].append(edges_loc['to'])).unique()).tolist()
+        node_list = ((edges_loc["from"].append(edges_loc["to"])).unique()).tolist()
         ext = {k: nodes_dict[k] for k in node_list if k in nodes_dict}
         edges_nodes = [edges_loc_asset, ext]
         data.append(edges_nodes)
@@ -72,8 +72,8 @@ def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     """
     # NEW VERSION from monday meeting
     rfc_prob = (rfc_pred.predict_proba(k_test))#[:, 1]
-    r_auc = roc_auc_score(y_test, r_prob, multi_class='ovr')
-    rfc_auc = roc_auc_score(y_test, rfc_prob, multi_class='ovr')  # Compute AUROC scores
+    r_auc = roc_auc_score(y_test, r_prob, multi_class="ovr")
+    rfc_auc = roc_auc_score(y_test, rfc_prob, multi_class="ovr")  # Compute AUROC scores
     """
 
     # OLD VERSION from before monday meeting
@@ -99,7 +99,7 @@ def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # removed "ENZYMES" and "FIRSTMM_DB" as they both have an error appear
     # datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]  # initial datasets
     # datasets = ["DD", "NCI1", "REDDIT-BINARY"]  # new datasets

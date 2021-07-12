@@ -15,11 +15,11 @@ def get_csv_value_sum(data_set, extension):
 
 
 def get_tsv_writer(file):
-    tsv_file = csv.writer(file, delimiter='\t')  # makes output file into a tsv
+    tsv_file = csv.writer(file, delimiter="\t")  # makes output file into a tsv
 
     # column names: if you want more output you must create a column name here
-    tsv_file.writerow(['dataset', 'Random_prediction_(AUROC)', 'RFC_(AUROC)',
-                       'accuracy_score', 'run_time'])
+    tsv_file.writerow(["dataset", "kernel", "Random_prediction_(AUROC)",
+                       "RFC_(AUROC)", "accuracy_score", "run_time"])
 
     return tsv_file
 
@@ -29,11 +29,11 @@ def write_tsv(data_set, kernel_name, r_auc, rfc_auc, acc_score, start, tsv_file)
     # if you want more output you must include here and update column names
     """
     # NEW VERSION from monday meeting
-    tsv_file.writerow([data_set, '%.3f' % rfc_auc, acc_score, time() - start])
+    tsv_file.writerow([data_set, "%.3f" % rfc_auc, acc_score, time() - start])
     """
 
     # OLD VERSION from before monday meeting
-    tsv_file.writerow([data_set, kernel_name, '%.3f' % r_auc, '%.3f' % rfc_auc,
+    tsv_file.writerow([data_set, kernel_name, "%.3f" % r_auc, "%.3f" % rfc_auc,
                        acc_score, time() - start])
 
 
@@ -53,11 +53,11 @@ def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     # rfac_auc = auc(rfc_fpr, rfc_tpr)
 
     plt.figure(figsize=(4, 4), dpi=100)
-    plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
-    plt.plot(rfc_fpr, rfc_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % rfc_auc)
-    plt.title('ROC Plot')  # title
-    plt.xlabel('False Positive Rate')  # x-axis label
-    plt.ylabel('True Positive Rate')  # y-axis label
+    plt.plot(r_fpr, r_tpr, marker=".", label="Chance prediction (AUROC= %.3f)" % r_auc)
+    plt.plot(rfc_fpr, rfc_tpr, linestyle="-", label="RFC (AUROC= %.3f)" % rfc_auc)
+    plt.title("ROC Plot")  # title
+    plt.xlabel("False Positive Rate")  # x-axis label
+    plt.ylabel("True Positive Rate")  # y-axis label
     plt.legend()  # show legend
     plt.savefig("../results/Kernel_RFC/plots/" + data_set + ".png")  # save the plot
     plt.show()  # show plot
