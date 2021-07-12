@@ -1,14 +1,28 @@
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
-from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from Helper_Functions import *
+from src.Kernels import *
 
 
 def standard_graph_file(data_set, tsv_file):
     start = time()
     data, graph_labels = get_data_and_labels(data_set)
-    perform_rfc(data_set, data, graph_labels, start, tsv_file)
+
+    kernels = get_kernels()
+
+    for kernel in kernels:
+        perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file)
+
+
+def get_kernels():
+    # add more kernel instances here
+    w_lehman = WLehman()
+
+    # add them to the list to return here
+    kernels = [w_lehman]
+
+    return kernels
 
 
 def get_data_and_labels(data_set):
@@ -40,13 +54,12 @@ def get_data_and_labels(data_set):
     return data, graph_labels
 
 
-def perform_rfc(data_set, data, graph_labels, start, tsv_file):
+def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     g_train, g_test, y_train, y_test = train_test_split(data, graph_labels,
                                                         test_size=0.2, random_state=42)
 
-    w_lehman = WeisfeilerLehman(n_iter=4, base_graph_kernel=VertexHistogram, normalize=True)
-    k_train = w_lehman.fit_transform(g_train)
-    k_test = w_lehman.transform(g_test)
+    k_train = kernel.get_k_train(g_train)
+    k_test = kernel.get_k_test(g_test)
 
     rfc_pred = RandomForestClassifier().fit(k_train, y_train)
     y_pred = rfc_pred.predict(k_test)  # predict the class for k_test
@@ -70,10 +83,11 @@ def perform_rfc(data_set, data, graph_labels, start, tsv_file):
 
     acc_score = accuracy_score(y_test, y_pred)
 
-    print('Random prediction: AUROC = %.3f' % r_auc)
-    print('RFC: AUROC = %.3f' % rfc_auc)
-    print("Accuracy score:", acc_score)
-    print(f'Time taken to run: {time() - start} seconds')
+    print("\tUsing Kernel:", kernel.get_name())
+    print("\tRandom prediction: AUROC = %.3f" % r_auc)
+    print("\tRFC: AUROC = %.3f" % rfc_auc)
+    print("\tAccuracy score:", acc_score)
+    print(f"\tTime taken to run: {time() - start} seconds\n")
 
     """
     # NEW VERSION from monday meeting
@@ -81,8 +95,7 @@ def perform_rfc(data_set, data, graph_labels, start, tsv_file):
     # plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc)
     """
 
-    # OLD VERSION from before monday meeting
-    write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file)
+    write_tsv(data_set, kernel.get_name(), r_auc, rfc_auc, acc_score, start, tsv_file)
     plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
 
@@ -97,7 +110,7 @@ if __name__ == '__main__':
     tsv_writer = get_tsv_writer(output_file)
 
     for dataset in datasets:
-        print("Working on: " + dataset)
+        print("Working on dataset: " + dataset)
         standard_graph_file(dataset, tsv_writer)
         print()
 

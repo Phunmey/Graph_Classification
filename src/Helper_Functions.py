@@ -25,7 +25,7 @@ def get_tsv_writer(file):
 
 
 # def write_tsv(data_set, rfc_auc, acc_score, start, tsv_file):
-def write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file):
+def write_tsv(data_set, kernel_name, r_auc, rfc_auc, acc_score, start, tsv_file):
     # if you want more output you must include here and update column names
     """
     # NEW VERSION from monday meeting
@@ -33,8 +33,8 @@ def write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file):
     """
 
     # OLD VERSION from before monday meeting
-    tsv_file.writerow([data_set, '%.3f' % r_auc, '%.3f' % rfc_auc, acc_score,
-                       time() - start])
+    tsv_file.writerow([data_set, kernel_name, '%.3f' % r_auc, '%.3f' % rfc_auc,
+                       acc_score, time() - start])
 
 
 # def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc):
