@@ -119,7 +119,7 @@ def get_tsv_writer(file):
 
     # column names: if you want more output you must create a column name here
     tsv_file.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)',
-                       'accuracy_score(y_test, y_pred)', 'run_time'])
+                       'accuracy_score', 'run_time'])
 
     return tsv_file
 
