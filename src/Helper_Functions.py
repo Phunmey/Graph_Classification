@@ -59,5 +59,5 @@ def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
     plt.legend()  # show legend
-    plt.savefig("../results/Graph_Kernels/plots/" + data_set + ".png")  # save the plot
+    plt.savefig("../results/Kernel_RFC/plots/" + data_set + ".png")  # save the plot
     plt.show()  # show plot

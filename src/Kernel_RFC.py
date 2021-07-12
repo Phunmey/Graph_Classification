@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # datasets = ["ENZYMES"]  # run against the file with errors
     datasets = ["PROTEINS"]  # run against the file that's good
 
-    output_file = open("../results/Graph_Kernels/Graph_Kernels_output.tsv", "wt")
+    output_file = open("../results/Kernel_RFC/Kernel_RFC_output.tsv", "wt")
     tsv_writer = get_tsv_writer(output_file)
 
     for dataset in datasets:
