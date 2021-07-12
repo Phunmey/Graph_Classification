@@ -77,34 +77,41 @@ def perform_rfc(data_set, data, graph_labels, start, tsv_file):
     # PREDICTION PROBABILITIES
     r_prob = [0 for _ in range(len(y_test))]  # worst case scenario
     # predict the class prob. for k_test and keep the positive outcomes
-    rfc_prob = (rfc_pred.predict_proba(k_test))[:, 1]
-    r_auc = roc_auc_score(y_test, r_prob)
-    rfc_auc = roc_auc_score(y_test, rfc_prob)  # Compute AUROC scores
+    rfc_prob = (rfc_pred.predict_proba(k_test))#[:, 1]
+    # r_auc = roc_auc_score(y_test, r_prob, multi_class='ovr')
+    rfc_auc = roc_auc_score(y_test, rfc_prob, multi_class='ovr')  # Compute AUROC scores
     acc_score = accuracy_score(y_test, y_pred)
 
-    print('Random prediction: AUROC = %.3f' % r_auc)
+    # print('Random prediction: AUROC = %.3f' % r_auc)
     print('RFC: AUROC = %.3f' % rfc_auc)
     print("Accuracy score:", acc_score)
     print(f'Time taken to run: {time() - start} seconds')
 
-    write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file)
-    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+    # write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file)
+    write_tsv(data_set, rfc_auc, acc_score, start, tsv_file)
+    # plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc)
 
 
-def write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file):
+# def write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file):
+def write_tsv(data_set, rfc_auc, acc_score, start, tsv_file):
     # if you want more output you must include here and update column names
-    tsv_file.writerow([data_set, '%.3f' % r_auc, '%.3f' % rfc_auc, acc_score,
+    # tsv_file.writerow([data_set, '%.3f' % r_auc, '%.3f' % rfc_auc, acc_score,
+    tsv_file.writerow([data_set, '%.3f' % rfc_auc, acc_score,
                        time() - start])
 
 
-def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
+# def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
+def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc):
     # PLOTTING THE ROC_CURVE
-    r_fpr, r_tpr, thresholds = roc_curve(y_test, r_prob, pos_label=2)
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=2)  # compute ROC
+    # r_fpr, r_tpr, thresholds = roc_curve(y_test, r_prob, pos_label=2)
+    # rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=2)  # compute ROC
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob)  # compute ROC
+    # rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=6)  # compute ROC
     # rfac_auc = auc(rfc_fpr, rfc_tpr)
 
     plt.figure(figsize=(4, 4), dpi=100)
-    plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
+    # plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
     plt.plot(rfc_fpr, rfc_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % rfc_auc)
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
@@ -118,7 +125,7 @@ def get_tsv_writer(file):
     tsv_file = csv.writer(file, delimiter='\t')  # makes output file into a tsv
 
     # column names: if you want more output you must create a column name here
-    tsv_file.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)',
+    tsv_file.writerow(['dataset', 'Random_prediction_(AUROC)', 'RFC_(AUROC)',
                        'accuracy_score', 'run_time'])
 
     return tsv_file
@@ -126,7 +133,8 @@ def get_tsv_writer(file):
 
 if __name__ == '__main__':
     # removed "ENZYMES" and "FIRSTMM_DB" as they both have an error appear
-    datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]
+    # datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]
+    datasets = ["ENZYMES"]
 
     output_file = open("../results/Graph_Kernels/Graph_Kernels_output.tsv", "wt")
     tsv_writer = get_tsv_writer(output_file)
