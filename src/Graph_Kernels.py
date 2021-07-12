@@ -1,3 +1,5 @@
+import csv
+
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 import matplotlib.pyplot as plt
@@ -18,10 +20,10 @@ UNUSED IMPORTS:
 """
 
 
-def standard_graph_file(data_set):
+def standard_graph_file(data_set, tsv_file):
     start = time()
     data, graph_labels = get_data_and_labels(data_set)
-    perform_rfc(data_set, data, graph_labels, start)
+    perform_rfc(data_set, data, graph_labels, start, tsv_file)
 
 
 def get_data_and_labels(data_set):
@@ -62,7 +64,7 @@ def get_csv_value_sum(data_set, extension):
     return sum((get_read_csv(data_set, extension).values.tolist()), [])
 
 
-def perform_rfc(data_set, data, graph_labels, start):
+def perform_rfc(data_set, data, graph_labels, start, tsv_file):
     g_train, g_test, y_train, y_test = train_test_split(data, graph_labels,
                                                         test_size=0.2, random_state=42)
 
@@ -79,13 +81,21 @@ def perform_rfc(data_set, data, graph_labels, start):
     rfc_prob = (rfc_pred.predict_proba(k_test))[:, 1]
     r_auc = roc_auc_score(y_test, r_prob)
     rfc_auc = roc_auc_score(y_test, rfc_prob)  # Compute AUROC scores
+    acc_score = accuracy_score(y_test, y_pred)
 
     print('Random prediction: AUROC = %.3f' % r_auc)
     print('RFC: AUROC = %.3f' % rfc_auc)
-    print(accuracy_score(y_test, y_pred))
-    print(f'Time taken to run:{time() - start} seconds')
+    print("Accuracy score:", acc_score)
+    print(f'Time taken to run: {time() - start} seconds')
 
+    write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file)
     plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+
+
+def write_tsv(data_set, r_auc, rfc_auc, acc_score, start, tsv_file):
+    # if you want more output you must include here and update column names
+    tsv_file.writerow([data_set, '%.3f' % r_auc, '%.3f' % rfc_auc, acc_score,
+                       time() - start])
 
 
 def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
@@ -105,14 +115,29 @@ def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     plt.show()  # show plot
 
 
+def get_tsv_writer(file):
+    tsv_file = csv.writer(file, delimiter='\t')  # makes output file into a tsv
+
+    # column names: if you want more output you must create a column name here
+    tsv_file.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)',
+                       'accuracy_score(y_test, y_pred)', 'run_time'])
+
+    return tsv_file
+
+
 if __name__ == '__main__':
     # removed "ENZYMES" and "FIRSTMM_DB" as they both have an error appear
     datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]
+
+    output_file = open("../results/Graph_Kernels/Graph_Kernels_output.tsv", "wt")
+    tsv_writer = get_tsv_writer(output_file)
+
     for dataset in datasets:
         print("Working on: " + dataset)
-        standard_graph_file(dataset)
+        standard_graph_file(dataset, tsv_writer)
         print()
 
+    output_file.close()
     print("End of processing.")
 
     # TO DO:
