@@ -96,7 +96,7 @@ def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     """
 
     write_tsv(data_set, kernel.get_name(), r_auc, rfc_auc, acc_score, start, tsv_file)
-    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc, "Kernel_RFC")
 
 
 if __name__ == "__main__":

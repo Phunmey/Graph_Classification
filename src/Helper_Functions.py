@@ -38,7 +38,7 @@ def write_tsv(data_set, kernel_name, r_auc, rfc_auc, acc_score, start, tsv_file)
 
 
 # def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc):
-def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
+def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc, folder_name):
     # PLOTTING THE ROC_CURVE
     """
     # NEW VERSION from monday meeting
@@ -59,5 +59,5 @@ def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     plt.xlabel("False Positive Rate")  # x-axis label
     plt.ylabel("True Positive Rate")  # y-axis label
     plt.legend()  # show legend
-    plt.savefig("../results/Kernel_RFC/plots/" + data_set + ".png")  # save the plot
+    plt.savefig("../results/" + folder_name + "/plots/" + data_set + ".png")  # save the plot
     plt.show()  # show plot
