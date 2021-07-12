@@ -1,3 +1,6 @@
+from grakel.kernels import WeisfeilerLehman, VertexHistogram
+
+
 class Kernel:
     def __init__(self, kernel, name):
         self.kernel = kernel
@@ -17,8 +20,6 @@ class Kernel:
 
 
 class WLehman(Kernel):
-    from grakel.kernels import WeisfeilerLehman, VertexHistogram
-
     __kernel = WeisfeilerLehman(n_iter=4, base_graph_kernel=VertexHistogram, normalize=True)
     __name = "Weisfeiler Lehman"
 
