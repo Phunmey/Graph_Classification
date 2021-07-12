@@ -1,4 +1,21 @@
 {
+  "global": {
+        "major_max": 20,
+        "minor_max": 20,
+        "n_cv_folds": 10,
+        "n_estimators": 100,
+        "param_grid": {
+            "criterion": ["gini", "entropy"],
+            "max_depth": [2, 4, 6, 8, 10],
+            "min_samples_split": [2, 5, 10],
+            "min_samples_leaf": [1, 2, 4],
+            "max_features": ["log2", "sqrt"],
+            "bootstrap": [true, false]
+        },
+        "test_fraction": 0.25,
+        "out_tsv_dir": "../results/kernels/",
+        "graph_dir": "../results/kernels/plots/"
+  },
   "dataset": {
     "BZR": {
 
