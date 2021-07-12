@@ -49,15 +49,16 @@ def standardGraphFile(dataset):
         edges_nodes = [edges_loc_asset, ext]
         DATA.append(edges_nodes)
 
-
-    G_train, G_test, y_train, y_test = train_test_split(DATA, graphlabels_aslist, test_size=0.2, random_state=42)
     WL = WeisfeilerLehman(n_iter=5, base_graph_kernel=VertexHistogram, verbose=True, normalize=True)
-    K_train = WL.fit_transform(G_train)
-    K_test = WL.transform(G_test)
+    K_train = WL.fit_transform(DATA)
+
+    G_train, G_test, y_train, y_test = train_test_split(K_train, graphlabels_aslist, test_size=0.2, random_state=42)
+
+    #K_test = WL.transform(G_test)
 
 
-    [m, M] = [np.nanmin(K_train), np.nanmax(K_train)]
-    diagrams = ripser(K_train, thresh=0.5, maxdim=2)['dgms']
+    [m, M] = [np.nanmin(G_train), np.nanmax(G_train)]
+    diagrams = ripser(G_train, thresh=0.5, maxdim=2)['dgms']
    # plot_diagrams(diagrams, title="Persistence Diagrams showing H_0 and H_1", show=True)
 
     H_0 = diagrams[0]
@@ -91,8 +92,8 @@ def standardGraphFile(dataset):
 
     Betti_train = BB_0 + BB_1 + BB_2  # concatenate betti numbers
 
-    [ma, Ma] = [np.nanmin(K_test), np.nanmax(K_test)]
-    testdiagrams = ripser(K_test, thresh=0.5, maxdim=2)['dgms']
+    [ma, Ma] = [np.nanmin(G_test), np.nanmax(G_test)]
+    testdiagrams = ripser(G_test, thresh=0.5, maxdim=2)['dgms']
     #plot_diagrams(testdiagrams, title="Persistence Diagrams showing H_0 and H_1", show=True)
 
     # splitting the dimension into 0, 1 and 2
@@ -130,6 +131,7 @@ def standardGraphFile(dataset):
     print(accuracy_score(y_test, y_pred))
     print(f'Time taken to run:{time() - start} seconds')
 
+I want to merge TDA with Kernels.
 
 if __name__ == '__main__':
     dataset = 'BZR'
