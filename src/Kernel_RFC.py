@@ -3,16 +3,16 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 from Helper_Functions import *
 from src.Kernels import *
+from time import time
 
 
 def standard_graph_file(data_set, tsv_file):
-    start = time()
-    data, graph_labels = get_data_and_labels(data_set)
-
+    data, graph_labels, data_time = get_data_and_labels(data_set)
     kernels = get_kernels()
 
+    print("\tPerforming random forest classification.")
     for kernel in kernels:
-        perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file)
+        perform_rfc(data_set, kernel, data, graph_labels, data_time, tsv_file)
 
 
 def get_kernels():
@@ -26,6 +26,9 @@ def get_kernels():
 
 
 def get_data_and_labels(data_set):
+    start = time()
+    print("\tGetting data and labels.")
+
     edges = get_read_csv(data_set, "_A.txt")
     edges.columns = ["from", "to"]
     unique_nodes = ((edges["from"].append(edges["to"])).unique()).tolist()
@@ -51,10 +54,16 @@ def get_data_and_labels(data_set):
         edges_nodes = [edges_loc_asset, ext]
         data.append(edges_nodes)
 
-    return data, graph_labels
+    data_time = time() - start
+    print(f"\t\tTime taken: {data_time} seconds\n")
+
+    return data, graph_labels, data_time
 
 
-def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
+def perform_rfc(data_set, kernel, data, graph_labels, data_time, tsv_file):
+    start = time()
+    print("\t\tUsing Kernel:", kernel.get_name())
+
     g_train, g_test, y_train, y_test = train_test_split(data, graph_labels,
                                                         test_size=0.2, random_state=42)
 
@@ -82,12 +91,14 @@ def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     rfc_auc = roc_auc_score(y_test, rfc_prob)  # Compute AUROC scores
 
     acc_score = accuracy_score(y_test, y_pred)
+    rfc_time = time() - start
+    total_time = rfc_time + data_time
 
-    print("\tUsing Kernel:", kernel.get_name())
-    print("\tRandom prediction: AUROC = %.3f" % r_auc)
-    print("\tRFC: AUROC = %.3f" % rfc_auc)
-    print("\tAccuracy score:", acc_score)
-    print(f"\tTime taken to run: {time() - start} seconds\n")
+    print("\t\t\tRandom prediction: AUROC = %.3f" % r_auc)
+    print("\t\t\tRFC: AUROC = %.3f" % rfc_auc)
+    print("\t\t\tAccuracy score:", acc_score)
+    print(f"\t\t\tTime taken to run RFC: {rfc_time} seconds")
+    print(f"\t\t\tTotal time: {total_time} seconds\n")
 
     """
     # NEW VERSION from monday meeting
@@ -95,7 +106,7 @@ def perform_rfc(data_set, kernel, data, graph_labels, start, tsv_file):
     # plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc)
     """
 
-    write_tsv(data_set, kernel.get_name(), r_auc, rfc_auc, acc_score, start, tsv_file)
+    write_tsv(data_set, kernel.get_name(), r_auc, rfc_auc, acc_score, total_time, tsv_file)
     plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc, "Kernel_RFC")
 
 
