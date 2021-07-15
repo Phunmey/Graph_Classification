@@ -1,216 +1,156 @@
 import numpy as np
 from ripser import ripser
-from persim import plot_diagrams
 import pandas as pd
-from pandas import DataFrame
 from igraph import *
-from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
-import gudhi as gd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve
-from sklearn.manifold import MDS, TSNE
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
 from numpy import inf
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import math
-from plotly import graph_objs as go
 from time import time
-import csv
+from Helper_Functions import *
 
 
-
-def standardGraphFile(dataset):
+def standard_graph_file(dataset):
     start = time()
     datapath = "../data"
-    edgedata = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
-    edgedata.columns = ['from', 'to']
-    graphlabels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt",
-                              header=None)
-    edgelabels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None)
-    grapher = sum(graphlabels.values.tolist(), [])
+    edge_data = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
+    edge_data.columns = ['from', 'to']
+    graph_labels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt", header=None)
+    edge_labels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None)
+    grapher = sum(graph_labels.values.tolist(), [])
     data = list(set(grapher))  # counting unique graph ids
-    #data = shuffle(graph1)
 
+    training_set, test_set = train_test_split(data, train_size=0.8, test_size=0.2)
 
-    Training_set, Test_set = train_test_split(data, train_size=0.8, test_size=0.2)
-
-    Train_Bet = []
-    for i in Training_set:
-        graphId = i
-        graphNodes = graphlabels[graphlabels.iloc[:, 0] == graphId].index.tolist()
-        graphEdges = edgedata[edgedata.index.isin(graphNodes)]
-        graph = Graph.TupleList(graphEdges.itertuples(index=False), directed=False, weights=True)
-        distmat = np.asarray(Graph.shortest_paths_dijkstra(graph))
-        #  fig, ax = plt.subplots()
-        # plot(graph, target = ax)
-        # plt.show()
-        # [mg, Mg] = [np.nanmin(distmat), np.nanmax(distmat[distmat != np.inf])]
-        distmat[distmat == inf] = 0
-        # mds_embedding = MDS(n_components=3, dissimilarity='precomputed').fit_transform(distmat)
-        # tsne_embedding = TSNE(n_components=3).fit_transform(distmat)
-        # pca_embedding = PCA(n_components=3).fit_transform(distmat)
-        #  [mi, ma] = [np.nanmin(tsne_embedding), np.nanmax(tsne_embedding)]
-        #  norm_embedding = tsne_embedding/ma
-        [mi, ma] = [np.nanmin(distmat), np.nanmax(distmat)]
-        norm_distmat = distmat / ma
+    # BETTI NUMBERS
+    ################
+    train_bet = []
+    for i in training_set:
+        norm_distmat = get_norm_dist_mat(i, graph_labels, edge_data)
         [m, M] = [np.nanmin(norm_distmat), np.nanmax(norm_distmat)]
         diagrams = ripser(norm_distmat, thresh=0.5, maxdim=2, distance_matrix=True)['dgms']
+        betti_graph_labels = get_betti_graph_labels(diagrams, M, data, edge_labels, i)
+        train_bet.append(betti_graph_labels)
 
-        # splitting the dimension into 0, 1 and 2
-        H_0 = diagrams[0]
-        H_1 = diagrams[1]
-        H_2 = diagrams[2]
-
-
-        # obtain betti numbers for the unique dimensions
-        step = 0.05
-        eps = np.arange(0, M + step, step)
-        BB_0 = [];
-        BB_1 = []
-        BB_2 = []
-        for j in eps:
-            B_0 = 0
-            for k in H_0:
-                if k[0] <= j and k[1] > j:
-                    B_0 = B_0 + 1
-            BB_0.append(B_0)
-
-            B_1 = 0
-            for l in H_1:
-                if l[0] <= j and l[1] > j:
-                    B_1 = B_1 + 1
-            BB_1.append(B_1)
-
-            B_2 = 0
-            for x in H_2:
-                if x[0] <= j and x[1] > j:
-                    B_2 = B_2 + 1
-            BB_2.append(B_2)
-
-        Betti_numbers = BB_0 + BB_1 + BB_2 # concatenate betti numbers
-        # Betti_graphid = [Betti_numbers, i]  # save Betti numbers with the graphid
-
-        graphidlocation = data.index(i)  # obtain the locations of the graphid
-        graphlabelslocation = (edgelabels.values[graphidlocation]).tolist()  # extract the corresponding graphlabels of the graphid
-        Betti_graphlabels = Betti_numbers + graphlabelslocation  # save betti numbers with graph labels
-        Train_Bet.append(Betti_graphlabels)
-
-    Test_Bet = []
-    for w in Test_set:
-        testgraphId = w
-        testgraphNodes = graphlabels[graphlabels.iloc[:, 0] == testgraphId].index.tolist()
-        testgraphEdges = edgedata[edgedata.index.isin(testgraphNodes)]
-        testgraph = Graph.TupleList(testgraphEdges.itertuples(index=False), directed=False, weights=True)
-        testdistmat = np.asarray(Graph.shortest_paths_dijkstra(testgraph))
-        #  [ng, Ng] = [np.nanmin(testdistmat), np.nanmax(testdistmat[testdistmat != np.inf])]
-        testdistmat[testdistmat == inf] = 0
-        # mdstest_embedding = MDS(n_components=3, dissimilarity='precomputed').fit_transform(testdistmat)
-        # tsnetest_embedding = TSNE(n_components=3).fit_transform(testdistmat)
-        # pcatest_embedding = PCA(n_components=3).fit_transform(testdistmat)
-        # [ni, na] = [np.nanmin(tsnetest_embedding), np.nanmax(tsnetest_embedding)]
-        # normtest_embedding = tsnetest_embedding/na
-        [ni, na] = [np.nanmin(testdistmat), np.nanmax(testdistmat)]
-        normtest_distmat = testdistmat/na
-        #  [n, N] = [np.nanmin(normtest_embedding), np.nanmax(normtest_embedding)]
+    test_bet = []
+    for w in test_set:
+        normtest_distmat = get_norm_dist_mat(w, graph_labels, edge_data)
         testdiagrams = ripser(normtest_distmat, thresh=0.5, maxdim=2, distance_matrix=True)['dgms']
+        betti_graph_labels_test = get_betti_graph_labels(testdiagrams, M, data, edge_labels, w)
+        test_bet.append(betti_graph_labels_test)
+
+    train_data = pd.DataFrame(train_bet)
+    test_data = pd.DataFrame(test_bet)
+
+    train_features = train_data.iloc[:, :-1].values
+    train_labels = train_data.iloc[:, -1].values
+    test_features = test_data.iloc[:, :-1].values
+    test_labels = test_data.iloc[:, -1].values
 
 
-        # splitting the dimension into 0, 1 and 2
-        Htest_0 = testdiagrams[0]
-        Htest_1 = testdiagrams[1]
-        Htest_2 = testdiagrams[2]
-
-        bb_0 = []
-        bb_1 = []
-        bb_2 = []
-        for q in eps:
-            b_0 = 0
-            for h in Htest_0:
-                if h[0] <= q and h[1] > q:
-                    b_0 = b_0 + 1
-            bb_0.append(b_0)
-
-            b_1 = 0
-            for y in Htest_1:
-                if y[0] <= q and y[1] > q:
-                    b_1 = b_1 + 1
-            bb_1.append(b_1)
-
-            b_2 = 0
-            for e in Htest_2:
-                if e[0] <= q and e[1] > q:
-                    b_2 = b_2 + 1
-            bb_2.append(b_2)
-
-        Betti_numbers_test = bb_0 + bb_1 + bb_2  # concatenate betti numbers
-
-        graphidlocation_test = data.index(w)  # obtain the locations of the graphid
-        graphlabelslocation_test = (edgelabels.values[graphidlocation_test]).tolist()  # extract the corresponding graphlabels of the graphid
-        Betti_graphlabels_test = Betti_numbers_test + graphlabelslocation_test  # save betti numbers with graph labels
-        Test_Bet.append(Betti_graphlabels_test)
-
-    Train_Data = pd.DataFrame(Train_Bet)
-    Test_Data = pd.DataFrame(Test_Bet)
-
-    Train_features = Train_Data.iloc[:, :-1].values
-    Train_labels = Train_Data.iloc[:, -1].values
-    Test_features = Test_Data.iloc[:, :-1].values
-    Test_labels = Test_Data.iloc[:, -1].values
-
-    # RandomForest hyperparameters tuning
+    # RANDOM FOREST HYPERPARAMETERS TUNING
+    ######################################
     max_features = ['auto', 'sqrt']
     n_estimators = [int(a) for a in np.linspace(start=10, stop=100, num=10)]
     max_depth = [int(b) for b in np.linspace(start=2, stop=10, num=5)]
     min_samples_split = [2, 5, 10]
     min_samples_leaf = [1, 2, 4]
     bootstrap = [True, False]
-    Param_Grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
+    param_grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
 
-    RFC = RandomForestClassifier()
-    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=10, n_jobs=1)
-    grid.fit(Train_features, Train_labels) # FIRSTMM_DB dataset doesn't work with this
+    rfc = RandomForestClassifier()
+    grid = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=10, n_jobs=1)
+    grid.fit(train_features, train_labels)  # FIRSTMM_DB dataset doesn't work with this
     param_choose = grid.best_params_
 
-    RFC_pred = RandomForestClassifier(**param_choose, random_state=1).fit(Train_features, Train_labels)
-    Test_pred = RFC_pred.predict(Test_features)
+    rfc_pred = RandomForestClassifier(**param_choose, random_state=1).fit(train_features, train_labels)
+    test_pred = rfc_pred.predict(test_features)
+
 
     # PREDICTION PROBABILITIES
-    r_probs = [0 for _ in range(len(Test_labels))]  # worst case scenario
-    RFC_probs = (RFC_pred.predict_proba(Test_features))[:,1]  # predict the class probabilities for K_test and keep the positive outcomes
-    r_auc = roc_auc_score(Test_labels, r_probs) # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
-    RFC_auc = roc_auc_score(Test_labels, RFC_probs)  # Compute area under the receiver operating characteristic curve for RandomForest # problem with ENZYME here
+    ##########################
+    r_probs = [0 for _ in range(len(test_labels))]  # worst case scenario
+    # predict the class probabilities for K_test and keep the positive outcomes
+    rfc_probs = (rfc_pred.predict_proba(test_features))[:, 1]
+    # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
+    r_auc = roc_auc_score(test_labels, r_probs)
+    # Compute area under the receiver operating characteristic curve for RandomForest # problem with ENZYME here
+    rfc_auc = roc_auc_score(test_labels, rfc_probs)
 
-    r_fpr, r_tpr, thresholds = roc_curve(Test_labels, r_probs) # problem with PROTEINS here
-    RFC_fpr, RFC_tpr, thresholds = roc_curve(Test_labels, RFC_probs)  # compute ROC
-    #RFAC_auc = auc(RFC_fpr, RFC_tpr) #basically does the same thing as RFC_auc
+    r_fpr, r_tpr, thresholds = roc_curve(test_labels, r_probs)  # problem with PROTEINS here
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(test_labels, rfc_probs)  # compute ROC
 
     plt.figure(figsize=(3, 3), dpi=100)
     plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
-    plt.plot(RFC_fpr, RFC_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % RFC_auc)
+    plt.plot(rfc_fpr, rfc_tpr, linestyle='-', label='RFC (AUROC= %.3f)' % rfc_auc)
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
     plt.legend()  # show legend
     plt.show()  # show plot
 
-#<<<<<<< HEAD
+    tsv_writer.writerow([dataset, 'NA' ,'%.3f' % r_auc, '%.3f' % rfc_auc, accuracy_score(test_labels, test_pred), time() - start])  # if you want more output you must include here and update column names
 
-#=======
-    
-    
-    tsv_writer.writerow([dataset, '%.3f' % r_auc, '%.3f' % RFC_auc, accuracy_score(Test_labels, Test_pred), time() - start])  # if you want more output you must include here and update column names
 
-    
-#>>>>>>> a2aa5094b0ad84077814ae0f2b2ac10c50bd6023
+def get_norm_dist_mat(id, labels, edges):
+    graph_nodes = labels[labels.iloc[:, 0] == id].index.tolist()
+    graph_edges = edges[edges.index.isin(graph_nodes)]
+    graph = Graph.TupleList(graph_edges.itertuples(index=False), directed=False, weights=True)
+    distmat = np.asarray(Graph.shortest_paths_dijkstra(graph))
+    distmat[distmat == inf] = 0
+    [mi, ma] = [np.nanmin(distmat), np.nanmax(distmat)]
+    norm_distmat = distmat / ma
+    return norm_distmat
+
+
+def get_betti_graph_labels(persistence_diagram, M, data, edgelabels, id):
+    step = 0.05
+    eps = np.arange(0, M + step, step)
+    # splitting the dimension into 0, 1 and 2
+    h_0 = persistence_diagram[0]
+    h_1 = persistence_diagram[1]
+    h_2 = persistence_diagram[2]
+
+    bb_0 = []
+    bb_1 = []
+    bb_2 = []
+
+    for q in eps:
+        b_0 = 0
+        for h in h_0:
+            if h[0] <= q and h[1] > q:
+                b_0 = b_0 + 1
+        bb_0.append(b_0)
+
+        b_1 = 0
+        for y in h_1:
+            if y[0] <= q and y[1] > q:
+                b_1 = b_1 + 1
+        bb_1.append(b_1)
+
+        b_2 = 0
+        for e in h_2:
+            if e[0] <= q and e[1] > q:
+                b_2 = b_2 + 1
+        bb_2.append(b_2)
+
+    # concatenate betti numbers
+    betti_numbers = bb_0 + bb_1 + bb_2
+    # obtain the locations of the graphid
+    graph_id_location = data.index(id)
+    # extract the corresponding graphlabels of the graphid
+    graph_labels_location = (edgelabels.values[graph_id_location]).tolist()
+    # save betti numbers with graph labels
+    betti_graph_labels = betti_numbers + graph_labels_location
+    return betti_graph_labels
+
+
 if __name__ == '__main__':
-    sets = ['BZR', 'COX2', 'DHFR', 'FRANKENSTEIN', 'PROTEINS', 'ENZYMES', 'FIRSTMM_DB']
-    with open('../results/Ripser_RFC_output.tsv', 'wt') as out_file: #opens output file
-        tsv_writer = csv.writer(out_file, delimiter='\t') #makes output file into a tsv
-        tsv_writer.writerow(['dataset', 'Random_prediction_(AUROC=)', 'RFC_(AUROC=)', 'accuracy_score(Test_labels,test_pred)', 'run_time']) # column names: if you want more output you must create a column name here
-        # runs standardGraphFile for all datasets
-        for dataset in sets:
-            standardGraphFile(dataset)
-
+    sets = ['BZR', 'COX2', 'DHFR', 'FRANKENSTEIN', 'PROTEINS', 'ENZYMES', 'FIRSTMM_DB', "DD", 'DHFR' , 'NCI1', 'REDDIT-BINARY']
+    out_file = open('../results/Ripser_RFC_output.tsv', 'wt')  # opens output file
+    tsv_writer = get_tsv_writer(out_file)
+    # runs standardGraphFile for all datasets
+    for dataset in sets:
+        standard_graph_file(dataset)
