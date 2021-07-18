@@ -14,7 +14,20 @@
         },
         "test_fraction": 0.25,
         "out_tsv_dir": "../results/kernels/",
-        "graph_dir": "../results/kernels/plots/"
+        "graph_dir": "../results/kernels/plots/",
+
+        "rip_train_size": 0.8,
+        "rip_test_size": 0.2,
+        "datapath": "../data",
+        "rip_thresh": 0.5,
+        "rip_maxdim": 2,
+        "rip_min_samples_split": [2, 5, 10],
+        "rip_min_samples_leaf": [1, 2, 4]
+  },
+  "default": {
+    "rip_cv": 10,
+    "rip_pos_label": 1,
+    "rip_multi_class": "ovo"
   },
   "dataset": {
     "BZR": {
@@ -33,13 +46,13 @@
 
     },
     "FIRSTMM_DB": {
-
+      "rip_cv": 2
     },
     "NCI1": {
 
     },
     "PROTEINS": {
-
+      "rip_pos_label": 2
     },
     "REDDIT-BINARY": {
 
