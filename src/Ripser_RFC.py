@@ -13,15 +13,14 @@ from Helper_Functions import *
 
 def standard_graph_file(dataset):
     start = time()
-    datapath = "../data"
-    edge_data = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)
+    edge_data = pd.read_csv(config['datapath'] + "/" +  config['name'] + "/" +  config['name'] + "_A.txt", header=None)
     edge_data.columns = ['from', 'to']
-    graph_labels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt", header=None)
-    edge_labels = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None)
+    graph_labels = pd.read_csv(config['datapath'] + "/" + config['name'] + "/" + config['name'] + "_graph_indicator.txt", header=None)
+    edge_labels = pd.read_csv(config['datapath'] + "/" + config['name'] + "/" + config['name'] + "_graph_labels.txt", header=None)
     grapher = sum(graph_labels.values.tolist(), [])
     data = list(set(grapher))  # counting unique graph ids
 
-    training_set, test_set = train_test_split(data, train_size=0.8, test_size=0.2)
+    training_set, test_set = train_test_split(data, train_size=config['rip_train_size'], test_size=config['rip_test_size'])
 
     # BETTI NUMBERS
     ################
@@ -29,14 +28,14 @@ def standard_graph_file(dataset):
     for i in training_set:
         norm_distmat = get_norm_dist_mat(i, graph_labels, edge_data)
         [m, M] = [np.nanmin(norm_distmat), np.nanmax(norm_distmat)]
-        diagrams = ripser(norm_distmat, thresh=0.5, maxdim=2, distance_matrix=True)['dgms']
+        diagrams = ripser(norm_distmat, thresh=config['rip_thresh'], maxdim=config['rip_maxdim'], distance_matrix=True)['dgms']
         betti_graph_labels = get_betti_graph_labels(diagrams, M, data, edge_labels, i)
         train_bet.append(betti_graph_labels)
 
     test_bet = []
     for w in test_set:
         normtest_distmat = get_norm_dist_mat(w, graph_labels, edge_data)
-        testdiagrams = ripser(normtest_distmat, thresh=0.5, maxdim=2, distance_matrix=True)['dgms']
+        testdiagrams = ripser(normtest_distmat, thresh=config['rip_thresh'], maxdim=config['rip_maxdim'], distance_matrix=True)['dgms']
         betti_graph_labels_test = get_betti_graph_labels(testdiagrams, M, data, edge_labels, w)
         test_bet.append(betti_graph_labels_test)
 
@@ -54,14 +53,14 @@ def standard_graph_file(dataset):
     max_features = ['auto', 'sqrt']
     n_estimators = [int(a) for a in np.linspace(start=10, stop=100, num=10)]
     max_depth = [int(b) for b in np.linspace(start=2, stop=10, num=5)]
-    min_samples_split = [2, 5, 10]
-    min_samples_leaf = [1, 2, 4]
+    #min_samples_split = [2, 5, 10]
+    #min_samples_leaf = [1, 2, 4]
     bootstrap = [True, False]
     param_grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
-                      min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
+                      min_samples_leaf=config['rip_min_samples_leaf'], min_samples_split=config['rip_min_samples_split'], bootstrap=bootstrap)
 
     rfc = RandomForestClassifier()
-    grid = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=10, n_jobs=1)
+    grid = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=config['rip_cv'], n_jobs=1)
     grid.fit(train_features, train_labels)  # FIRSTMM_DB dataset doesn't work with this
     param_choose = grid.best_params_
 
@@ -75,12 +74,15 @@ def standard_graph_file(dataset):
     # predict the class probabilities for K_test and keep the positive outcomes
     rfc_probs = (rfc_pred.predict_proba(test_features))[:, 1]
     # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
-    r_auc = roc_auc_score(test_labels, r_probs)
+    r_auc = roc_auc_score(test_labels, r_probs, multi_class=config['rip_multi_class'])
     # Compute area under the receiver operating characteristic curve for RandomForest # problem with ENZYME here
     rfc_auc = roc_auc_score(test_labels, rfc_probs)
 
-    r_fpr, r_tpr, thresholds = roc_curve(test_labels, r_probs)  # problem with PROTEINS here
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(test_labels, rfc_probs)  # compute ROC
+    tsv_writer.writerow([config['name'], 'NA', '%.3f' % r_auc, '%.3f' % rfc_auc, accuracy_score(test_labels, test_pred),
+                         time() - start])  # if you want more output you must include here and update column names
+
+    r_fpr, r_tpr, thresholds = roc_curve(test_labels, r_probs, config['rip_pos_label'])
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(test_labels, rfc_probs, config['rip_pos_label'])  # compute ROC
 
     plt.figure(figsize=(3, 3), dpi=100)
     plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
@@ -88,10 +90,9 @@ def standard_graph_file(dataset):
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
-    plt.legend()  # show legend
-    plt.show()  # show plot
-
-    tsv_writer.writerow([dataset, 'NA' ,'%.3f' % r_auc, '%.3f' % rfc_auc, accuracy_score(test_labels, test_pred), time() - start])  # if you want more output you must include here and update column names
+    plt.savefig("../results/Ripser_RFC/plots/" + config['name'] + ".png")  # save the plot
+    #plt.legend()  # show legend
+    #plt.show()  # show plot
 
 
 def get_norm_dist_mat(id, labels, edges):
@@ -148,9 +149,11 @@ def get_betti_graph_labels(persistence_diagram, M, data, edgelabels, id):
 
 
 if __name__ == '__main__':
-    sets = ['BZR', 'COX2', 'DHFR', 'FRANKENSTEIN', 'PROTEINS', 'ENZYMES', 'FIRSTMM_DB', "DD", 'DHFR' , 'NCI1', 'REDDIT-BINARY']
-    out_file = open('../results/Ripser_RFC_output.tsv', 'wt')  # opens output file
-    tsv_writer = get_tsv_writer(out_file)
+    configs = get_configs()
+    out_file = open("../results/Ripser_RFC/Ripser_RFC_output.tsv", 'wt')  # opens output file
+    tsv_writer = csv.writer(out_file, delimiter="\t")
+    tsv_writer.writerow(["dataset", "kernel", "Random_prediction_(AUROC)", "RFC_(AUROC)", "accuracy_score", "run_time"])
     # runs standardGraphFile for all datasets
-    for dataset in sets:
-        standard_graph_file(dataset)
+    for config in configs:
+        print("PROCESSING DATA SET: " + config['name'])
+        standard_graph_file(config)

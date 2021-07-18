@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import csv
 from sklearn.metrics import roc_curve
-
+import json
 
 def get_read_csv(data_set, extension):
     path = "../data"
@@ -60,3 +60,22 @@ def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc, folder_na
     plt.legend()  # show legend
     plt.savefig("../results/" + folder_name + "/plots/" + data_set + ".png")  # save the plot
     plt.show()  # show plot
+
+def get_configs():
+    """
+	gets and consolidates configs for each dataset
+	return:    list of config dictionaries
+	credit : Jon Brownell and Simon Powell
+	"""
+    config_file = "../config/config.json"  # relative path to config file
+    with open(config_file, 'rt') as f:
+        config_full = json.load(f)
+    global_conf = config_full['global']
+    datasets = config_full['dataset']
+    default = config_full['default']  # default configs for datasets
+    # config dictionaries for each dataset: conf comes after default so it will replace duplicate keys
+    configs = [{'name': name, **global_conf, **default, **conf} for name, conf in datasets.items()]
+    for c in configs:
+        c['filename'] = c['name'].replace(' ', '_').lower()  # clean filename
+        c['matrix_path'] = f'{c["graph_dir"]}{c["filename"]}/'
+    return configs
