@@ -38,7 +38,7 @@
     "pos_label": 2,
     "test_size": 0.2,
     "random_state": 42,
-    "multi_class": "ovo"
+    "multi_class": "ovr"
   },
   "dataset": {
     "BZR": {
@@ -65,10 +65,8 @@
     },
     "PROTEINS": {
       "data_path": "../data/PROTEINS/",
+      "multi_class": "raise",
       "rip_pos_label": 2
-    },
-    "REDDIT-BINARY": {
-      "data_path": "../data/REDDIT-BINARY/"
     }
   }
 }
