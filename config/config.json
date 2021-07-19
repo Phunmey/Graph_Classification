@@ -42,33 +42,33 @@
   },
   "dataset": {
     "BZR": {
-      "data_path": "../data/BZR"
+      "data_path": "../data/BZR/"
     },
     "COX2": {
-      "data_path": "../data/COX2"
+      "data_path": "../data/COX2/"
     },
     "DD": {
-      "data_path": "../data/DD"
+      "data_path": "../data/DD/"
     },
     "DHFR": {
-      "data_path": "../data/DHFR"
+      "data_path": "../data/DHFR/"
     },
     "ENZYMES": {
-      "data_path": "../data/ENZYMES"
+      "data_path": "../data/ENZYMES/"
     },
     "FIRSTMM_DB": {
-      "data_path": "../data/FIRSTMM_DB",
+      "data_path": "../data/FIRSTMM_DB/",
       "rip_cv": 2
     },
     "NCI1": {
-      "data_path": "../data/NCI1"
+      "data_path": "../data/NCI1/"
     },
     "PROTEINS": {
-      "data_path": "../data/PROTEINS",
+      "data_path": "../data/PROTEINS/",
       "rip_pos_label": 2
     },
     "REDDIT-BINARY": {
-      "data_path": "../data/REDDIT-BINARY"
+      "data_path": "../data/REDDIT-BINARY/"
     }
   }
 }

@@ -6,8 +6,7 @@ import json
 
 
 def get_read_csv(config, extension):
-    return pd.read_csv(config["data_path"] + "/" + config["name"] + extension,
-                       header=None)
+    return pd.read_csv(config["data_path"] + config["name"] + extension, header=None)
 
 
 def get_csv_value_sum(config, extension):
