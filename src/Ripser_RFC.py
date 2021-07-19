@@ -90,7 +90,7 @@ def standard_graph_file(dataset):
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
-    plt.savefig("../results/Ripser_RFC/plots/" + config['name'] + ".png")  # save the plot
+    plt.savefig(config['rip_plots'] + config['name'] + ".png")  # save the plot
     #plt.legend()  # show legend
     #plt.show()  # show plot
 
@@ -149,7 +149,7 @@ def get_betti_graph_labels(persistence_diagram, M, data, edgelabels, id):
 
 
 if __name__ == '__main__':
-    configs = get_configs()
+    configs = get_configs('Ripser_RFC')
     out_file = open("../results/Ripser_RFC/Ripser_RFC_output.tsv", 'wt')  # opens output file
     tsv_writer = csv.writer(out_file, delimiter="\t")
     tsv_writer.writerow(["dataset", "kernel", "Random_prediction_(AUROC)", "RFC_(AUROC)", "accuracy_score", "run_time"])
