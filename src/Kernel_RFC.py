@@ -78,18 +78,9 @@ def perform_rfc(config, kernel, data, graph_labels, data_time):
     r_prob = [0 for _ in range(len(y_test))]  # worst case scenario
 
     # predict the class prob. for k_test and keep the positive outcomes
-
-    """
-    # NEW VERSION from monday meeting
-    rfc_prob = (rfc_pred.predict_proba(k_test))#[:, 1]
-    r_auc = roc_auc_score(y_test, r_prob, multi_class="ovr")
-    rfc_auc = roc_auc_score(y_test, rfc_prob, multi_class="ovr")  # Compute AUROC scores
-    """
-
-    # OLD VERSION from before monday meeting
     rfc_prob = (rfc_pred.predict_proba(k_test))[:, 1]
-    r_auc = roc_auc_score(y_test, r_prob)
-    rfc_auc = roc_auc_score(y_test, rfc_prob)  # Compute AUROC scores
+    r_auc = roc_auc_score(y_test, r_prob, multi_class=config["multi_class"])
+    rfc_auc = roc_auc_score(y_test, rfc_prob, multi_class=config["multi_class"])  # Compute AUROC scores
 
     acc_score = accuracy_score(y_test, y_pred)
     rfc_time = time() - start
