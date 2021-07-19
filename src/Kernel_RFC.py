@@ -6,13 +6,13 @@ from src.Kernels import *
 from time import time
 
 
-def standard_graph_file(data_set, tsv_file):
-    data, graph_labels, data_time = get_data_and_labels(data_set)
+def standard_graph_file(config):
+    data, graph_labels, data_time = get_data_and_labels(config)
     kernels = get_kernels()
 
     print("\tPerforming random forest classification.")
     for kernel in kernels:
-        perform_rfc(data_set, kernel, data, graph_labels, data_time, tsv_file)
+        perform_rfc(config, kernel, data, graph_labels, data_time)
 
 
 def get_kernels():
@@ -25,20 +25,20 @@ def get_kernels():
     return kernels
 
 
-def get_data_and_labels(data_set):
+def get_data_and_labels(config):
     start = time()
     print("\tGetting data and labels.")
 
-    edges = get_read_csv(data_set, "_A.txt")
+    edges = get_read_csv(config, "_A.txt")
     edges.columns = ["from", "to"]
     unique_nodes = ((edges["from"].append(edges["to"])).unique()).tolist()
     missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
                      x not in unique_nodes]  # find the missing nodes
     nodes = unique_nodes + missing_nodes
     nodes.sort()
-    graph_indicators = get_csv_value_sum(data_set, "_graph_indicator.txt")
-    graph_labels = get_csv_value_sum(data_set, "_graph_labels.txt")
-    node_labels = get_csv_value_sum(data_set, "_node_labels.txt")
+    graph_indicators = get_csv_value_sum(config, "_graph_indicator.txt")
+    graph_labels = get_csv_value_sum(config, "_graph_labels.txt")
+    node_labels = get_csv_value_sum(config, "_node_labels.txt")
     nodes_dict = dict(zip(nodes, node_labels))
     unique_graph_indicator = list(set(graph_indicators))
 
@@ -60,12 +60,13 @@ def get_data_and_labels(data_set):
     return data, graph_labels, data_time
 
 
-def perform_rfc(data_set, kernel, data, graph_labels, data_time, tsv_file):
+def perform_rfc(config, kernel, data, graph_labels, data_time):
     start = time()
     print("\t\tUsing Kernel:", kernel.get_name())
 
     g_train, g_test, y_train, y_test = train_test_split(data, graph_labels,
-                                                        test_size=0.2, random_state=42)
+                                                        test_size=config["test_size"],
+                                                        random_state=config["random_state"])
 
     k_train = kernel.get_k_train(g_train)
     k_test = kernel.get_k_test(g_test)
@@ -106,23 +107,29 @@ def perform_rfc(data_set, kernel, data, graph_labels, data_time, tsv_file):
     # plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc)
     """
 
-    write_tsv(data_set, kernel.get_name(), r_auc, rfc_auc, acc_score, total_time, tsv_file)
-    plot_roc_curve(data_set, y_test, r_prob, rfc_prob, r_auc, rfc_auc, "Kernel_RFC")
+    write_tsv(config, kernel.get_name(), r_auc, rfc_auc, acc_score, total_time)
+    plot_roc_curve(config, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
 
 if __name__ == "__main__":
-    # removed "ENZYMES" and "FIRSTMM_DB" as they both have an error appear
-    # datasets = ["BZR", "COX2", "DHFR", "PROTEINS"]  # initial datasets
-    # datasets = ["DD", "NCI1", "REDDIT-BINARY"]  # new datasets
-    # datasets = ["ENZYMES"]  # run against the file with errors
-    datasets = ["PROTEINS"]  # run against the file that's good
+    # BZR has an error message.  It's index 0
+    # "ENZYMES" and "FIRSTMM_DB" both have an error appear.  ENZYMES is index 4
+    # "PROTEINS" is the best file to run against index 7
 
-    output_file = open("../results/Kernel_RFC/Kernel_RFC_output.tsv", "wt")
+    script_name = "Kernel_RFC"
+
+    configs = get_configs(script_name)
+    output_file = open(configs[0]["out_tsv_file"], "wt")
     tsv_writer = get_tsv_writer(output_file)
 
-    for dataset in datasets:
-        print("Working on dataset: " + dataset)
-        standard_graph_file(dataset, tsv_writer)
+    # change the following line to whatever dataset you want to test,
+    # or comment it out if you want to run them all
+    configs = [configs[7]]
+
+    for conf in configs:
+        print("Working on dataset: " + conf["name"])
+        conf["tsv_file"] = tsv_writer
+        standard_graph_file(conf)
         print()
 
     output_file.close()

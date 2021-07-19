@@ -13,8 +13,8 @@
             "bootstrap": [true, false]
         },
         "test_fraction": 0.25,
-        "out_tsv_dir": "../results/kernels/",
-        "graph_dir": "../results/kernels/plots/",
+        "fig_size": 4,
+        "dpi": 100,
 
         "rip_train_size": 0.8,
         "rip_test_size": 0.2,
@@ -29,33 +29,46 @@
     "rip_pos_label": 1,
     "rip_multi_class": "ovo"
   },
+  "Ripser_RFC": {
+
+  },
+  "Kernel_RFC": {
+    "out_tsv_file": "../results/Kernel_RFC/Kernel_RFC_output.tsv",
+    "graph_dir": "../results/Kernel_RFC/plots/",
+    "pos_label": 2,
+    "test_size": 0.2,
+    "random_state": 42,
+    "multi_class": "ovo"
+  },
   "dataset": {
     "BZR": {
-
+      "data_path": "../data/BZR"
     },
     "COX2": {
-
+      "data_path": "../data/COX2"
     },
     "DD": {
-
+      "data_path": "../data/DD"
     },
     "DHFR": {
-
+      "data_path": "../data/DHFR"
     },
     "ENZYMES": {
-
+      "data_path": "../data/ENZYMES"
     },
     "FIRSTMM_DB": {
+      "data_path": "../data/FIRSTMM_DB",
       "rip_cv": 2
     },
     "NCI1": {
-
+      "data_path": "../data/NCI1"
     },
     "PROTEINS": {
+      "data_path": "../data/PROTEINS",
       "rip_pos_label": 2
     },
     "REDDIT-BINARY": {
-
+      "data_path": "../data/REDDIT-BINARY"
     }
   }
 }
