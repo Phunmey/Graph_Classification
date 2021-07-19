@@ -81,7 +81,6 @@ def get_configs(script_name):
     configs = [{'name': name, **global_conf, **default, **script, **conf} for name, conf in datasets.items()]
 
     for c in configs:
-        c['script'] = script_name
         c['filename'] = c['name'].replace(' ', '_').lower()  # clean filename
         c['graph_path'] = f'{c["graph_dir"]}{c["filename"]}'
 
