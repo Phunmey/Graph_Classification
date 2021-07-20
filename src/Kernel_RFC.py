@@ -18,9 +18,11 @@ def standard_graph_file(config):
 def get_kernels():
     # add more kernel instances here
     w_lehman = WLehman()
+    w_lehman_optimal = WLehmanOptimal()
+    shortest_path = ShortPath()
 
     # add them to the list to return here
-    kernels = [w_lehman]
+    kernels = [w_lehman, w_lehman_optimal, shortest_path]
 
     return kernels
 

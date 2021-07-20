@@ -1,4 +1,4 @@
-from grakel.kernels import WeisfeilerLehman, VertexHistogram
+from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment, ShortestPath
 
 
 class Kernel:
@@ -22,6 +22,22 @@ class Kernel:
 class WLehman(Kernel):
     __kernel = WeisfeilerLehman(n_iter=4, base_graph_kernel=VertexHistogram, normalize=True)
     __name = "Weisfeiler Lehman"
+
+    def __init__(self):
+        super().__init__(self.__kernel, self.__name)
+
+
+class WLehmanOptimal(Kernel):
+    __kernel = WeisfeilerLehmanOptimalAssignment(n_iter=4, normalize=True)
+    __name = "Weisfeiler Lehman Optimal Assignment"
+
+    def __init__(self):
+        super().__init__(self.__kernel, self.__name)
+
+
+class ShortPath(Kernel):
+    __kernel = ShortestPath(normalize=True)
+    __name = "Shortest Path"
 
     def __init__(self):
         super().__init__(self.__kernel, self.__name)
