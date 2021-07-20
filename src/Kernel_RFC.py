@@ -103,19 +103,21 @@ def perform_rfc(config, kernel, data, graph_labels, data_time):
 
 
 if __name__ == "__main__":
-    # BZR has an error message.  It's index 0
-    # "ENZYMES" and "FIRSTMM_DB" both have an error appear.  ENZYMES is index 4
-    # "PROTEINS" is the best file to run against index 7
-
     script_name = "Kernel_RFC"
 
     configs = get_configs(script_name)
     output_file = open(configs[0]["out_tsv_file"], "wt")
     tsv_writer = get_tsv_writer(output_file)
 
-    # change the following line to whatever dataset you want to test,
-    # or comment it out if you want to run them all
-    configs = [configs[7]]
+    # Change the following lines to whatever dataset you want to test,
+    # or comment them out if you want to run all datasets.
+    # Skipping ENZYMES and FIRSTMM_DB due to error messages
+    configs = [configs[0],
+               configs[1],
+               configs[2],
+               configs[3],
+               configs[6],
+               configs[7]]
 
     for conf in configs:
         print("Working on dataset: " + conf["name"])
