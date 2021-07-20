@@ -13,14 +13,14 @@ from Helper_Functions import *
 
 def standard_graph_file(dataset):
     start = time()
-    edge_data = pd.read_csv(config['datapath'] + "/" +  config['name'] + "/" +  config['name'] + "_A.txt", header=None)
+    edge_data = pd.read_csv(config['data_path']+  config['name'] + "_A.txt", header=None)
     edge_data.columns = ['from', 'to']
-    graph_labels = pd.read_csv(config['datapath'] + "/" + config['name'] + "/" + config['name'] + "_graph_indicator.txt", header=None)
-    edge_labels = pd.read_csv(config['datapath'] + "/" + config['name'] + "/" + config['name'] + "_graph_labels.txt", header=None)
+    graph_labels = pd.read_csv(config['data_path'] + config['name'] + "_graph_indicator.txt", header=None)
+    edge_labels = pd.read_csv(config['data_path'] + config['name'] + "_graph_labels.txt", header=None)
     grapher = sum(graph_labels.values.tolist(), [])
     data = list(set(grapher))  # counting unique graph ids
 
-    training_set, test_set = train_test_split(data, train_size=config['rip_train_size'], test_size=config['rip_test_size'])
+    training_set, test_set = train_test_split(data, train_size=config['train_size'], test_size=config['test_size'])
 
     # BETTI NUMBERS
     ################
@@ -28,14 +28,14 @@ def standard_graph_file(dataset):
     for i in training_set:
         norm_distmat = get_norm_dist_mat(i, graph_labels, edge_data)
         [m, M] = [np.nanmin(norm_distmat), np.nanmax(norm_distmat)]
-        diagrams = ripser(norm_distmat, thresh=config['rip_thresh'], maxdim=config['rip_maxdim'], distance_matrix=True)['dgms']
+        diagrams = ripser(norm_distmat, thresh=config['thresh'], maxdim=config['maxdim'], distance_matrix=True)['dgms']
         betti_graph_labels = get_betti_graph_labels(diagrams, M, data, edge_labels, i)
         train_bet.append(betti_graph_labels)
 
     test_bet = []
     for w in test_set:
         normtest_distmat = get_norm_dist_mat(w, graph_labels, edge_data)
-        testdiagrams = ripser(normtest_distmat, thresh=config['rip_thresh'], maxdim=config['rip_maxdim'], distance_matrix=True)['dgms']
+        testdiagrams = ripser(normtest_distmat, thresh=config['thresh'], maxdim=config['maxdim'], distance_matrix=True)['dgms']
         betti_graph_labels_test = get_betti_graph_labels(testdiagrams, M, data, edge_labels, w)
         test_bet.append(betti_graph_labels_test)
 
@@ -57,10 +57,10 @@ def standard_graph_file(dataset):
     #min_samples_leaf = [1, 2, 4]
     bootstrap = [True, False]
     param_grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
-                      min_samples_leaf=config['rip_min_samples_leaf'], min_samples_split=config['rip_min_samples_split'], bootstrap=bootstrap)
+                      min_samples_leaf=config['min_samples_leaf'], min_samples_split=config['min_samples_split'], bootstrap=bootstrap)
 
     rfc = RandomForestClassifier()
-    grid = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=config['rip_cv'], n_jobs=1)
+    grid = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=config['cv'], n_jobs=1)
     grid.fit(train_features, train_labels)  # FIRSTMM_DB dataset doesn't work with this
     param_choose = grid.best_params_
 
@@ -74,15 +74,15 @@ def standard_graph_file(dataset):
     # predict the class probabilities for K_test and keep the positive outcomes
     rfc_probs = (rfc_pred.predict_proba(test_features))[:, 1]
     # Compute area under the receiver operating characteristic (ROC) curve for worst case scenario
-    r_auc = roc_auc_score(test_labels, r_probs, multi_class=config['rip_multi_class'])
+    r_auc = roc_auc_score(test_labels, r_probs, multi_class=config['multi_class'])
     # Compute area under the receiver operating characteristic curve for RandomForest # problem with ENZYME here
     rfc_auc = roc_auc_score(test_labels, rfc_probs)
 
     tsv_writer.writerow([config['name'], 'NA', '%.3f' % r_auc, '%.3f' % rfc_auc, accuracy_score(test_labels, test_pred),
                          time() - start])  # if you want more output you must include here and update column names
 
-    r_fpr, r_tpr, thresholds = roc_curve(test_labels, r_probs, config['rip_pos_label'])
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(test_labels, rfc_probs, config['rip_pos_label'])  # compute ROC
+    r_fpr, r_tpr, thresholds = roc_curve(test_labels, r_probs, config['pos_label'])
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(test_labels, rfc_probs, config['pos_label'])  # compute ROC
 
     plt.figure(figsize=(3, 3), dpi=100)
     plt.plot(r_fpr, r_tpr, marker='.', label='Chance prediction (AUROC= %.3f)' % r_auc)
@@ -90,7 +90,7 @@ def standard_graph_file(dataset):
     plt.title('ROC Plot')  # title
     plt.xlabel('False Positive Rate')  # x-axis label
     plt.ylabel('True Positive Rate')  # y-axis label
-    plt.savefig(config['rip_plots'] + config['name'] + ".png")  # save the plot
+    plt.savefig(config['graph_dir'] + config['name'] + ".png")  # save the plot
     #plt.legend()  # show legend
     #plt.show()  # show plot
 
