@@ -8,14 +8,17 @@ from time import time
 
 def standard_graph_file(config):
     data, graph_labels, data_time = get_data_and_labels(config)
-    kernels = get_kernels()
+    kernels = get_kernels(config)
 
     print("\tPerforming random forest classification.")
     for kernel in kernels:
         perform_rfc(config, kernel, data, graph_labels, data_time)
 
+    # creates a plot with a line for each kernel for this dataset / config
+    plot_roc_curve(config)
 
-def get_kernels():
+
+def get_kernels(config):
     # add more kernel instances here
     w_lehman = WLehman()
     w_lehman_optimal = WLehmanOptimal()
@@ -23,6 +26,9 @@ def get_kernels():
 
     # add them to the list to return here
     kernels = [w_lehman, w_lehman_optimal, shortest_path]
+
+    # adds a list of all kernel names to this dataset / config for plotting
+    config["plot_list"] = [name.get_name() for name in kernels]
 
     return kernels
 
@@ -95,7 +101,7 @@ def perform_rfc(config, kernel, data, graph_labels, data_time):
     print(f"\t\t\tTotal time: {total_time} seconds\n")
 
     write_tsv(config, kernel.get_name(), r_auc, rfc_auc, acc_score, total_time)
-    plot_roc_curve(config, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
+    add_roc_info(config, kernel.get_name(), y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
 
 if __name__ == "__main__":
