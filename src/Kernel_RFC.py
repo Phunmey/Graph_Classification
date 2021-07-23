@@ -94,12 +94,6 @@ def perform_rfc(config, kernel, data, graph_labels, data_time):
     print(f"\t\t\tTime taken to run RFC: {rfc_time} seconds")
     print(f"\t\t\tTotal time: {total_time} seconds\n")
 
-    """
-    # NEW VERSION from monday meeting
-    # write_tsv(data_set, rfc_auc, acc_score, start, tsv_file)
-    # plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc)
-    """
-
     write_tsv(config, kernel.get_name(), r_auc, rfc_auc, acc_score, total_time)
     plot_roc_curve(config, y_test, r_prob, rfc_prob, r_auc, rfc_auc)
 
@@ -129,9 +123,3 @@ if __name__ == "__main__":
 
     output_file.close()
     print("End of processing.")
-
-    # TO DO:
-    # GridsearchCV documentation and output tab separated files for Emma
-    # Steven: Cross validation presentation on Monday
-    # Poupak will present on feature scaling
-    # We need a config file for the project

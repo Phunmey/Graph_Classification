@@ -23,29 +23,14 @@ def get_tsv_writer(file):
     return tsv_file
 
 
-# def write_tsv(data_set, rfc_auc, acc_score, start, tsv_file):
 def write_tsv(config, kernel_name, r_auc, rfc_auc, acc_score, total_time):
     # if you want more output you must include here and update column names
-    """
-    # NEW VERSION from monday meeting
-    tsv_file.writerow([data_set, "%.3f" % rfc_auc, acc_score, time() - start])
-    """
-
-    # OLD VERSION from before monday meeting
     config["tsv_file"].writerow([config["name"], kernel_name, "%.3f" % r_auc,
                                  "%.3f" % rfc_auc, acc_score, total_time])
 
 
-# def plot_roc_curve(data_set, y_test, r_prob, rfc_prob, rfc_auc):
 def plot_roc_curve(config, y_test, r_prob, rfc_prob, r_auc, rfc_auc):
     # PLOTTING THE ROC_CURVE
-    """
-    # NEW VERSION from monday meeting
-    # rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob)  # compute ROC
-    # rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=6)  # compute ROC
-    """
-
-    # OLD VERSION from before monday meeting
     r_fpr, r_tpr, thresholds = roc_curve(y_test, r_prob, pos_label=config["pos_label"])
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_prob, pos_label=config["pos_label"])  # compute ROC
 
