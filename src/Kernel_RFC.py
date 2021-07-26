@@ -28,7 +28,7 @@ def get_kernels(config):
     kernels = [w_lehman, w_lehman_optimal, shortest_path]
 
     # adds a list of all kernel names to this dataset / config for plotting
-    config["plot_list"] = [name.get_name() for name in kernels]
+    config["plot_list"] = [k.get_name() for k in kernels]
 
     return kernels
 
