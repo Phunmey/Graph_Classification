@@ -14,58 +14,18 @@ from igraph import *
 # from tqdm import tqdm
 
 
-def standardGraphFile(dataset):
+def standard_graph_file(dataset):
     start = time()
-    data_path = "/project/6058757/taiwo/dataset"  # dataset path on computer
-    edges_asdf = pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
-    edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
-    unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
-    missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
-                     x not in unique_nodes]  # find the missing nodes
-    node_list = unique_nodes + missing_nodes
-    node_list.sort()
-    graph_indicator_list = sum((pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_graph_indicator.txt",
-                                            header=None).values.tolist()), [])
-    graph_labels_list = sum(
-        (pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None).values.tolist()), [])
-    # node_labels_list = sum(
-    # (pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_node_labels.txt", header=None).values.tolist()), [])
-    random_node_labels = [5] * len(node_list)
-    random_dict = list(dict(zip(node_list, random_node_labels)).items())
-    # nodes_dict = list(dict(zip(node_list, node_labels_list)).items())  # makes nodes and their labels as a dict
-    unique_graph_indicator = list(set(graph_indicator_list))  # list unique graphids 100
 
-    random.seed(42)
+    unique_graph_indicator, graph_indicator_list, edges_asdf, random_dict, graph_labels_list = read_data(dataset)
 
-    id_max = []
-    id_min = []
-    total_degree = []
+    id_max, id_min, total_degree = get_degree_value(unique_graph_indicator, graph_indicator_list, edges_asdf)
 
-    for j in unique_graph_indicator:
-        graph_id1 = j
-        graph_id_loc1 = [index for index, element in enumerate(graph_indicator_list) if
-                         element == graph_id1]  # list the index of the graph_id locations
-        edges_loc1 = edges_asdf[
-            edges_asdf.index.isin(graph_id_loc1)]  # obtain edges that corresponds to these locations
-        a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
-        deg_calc1 = np.asarray(a_graph1.degree())  # obtain node degrees
-        id_max.append(max(deg_calc1))
-        id_min.append(min(deg_calc1))
-        total_degree.extend(deg_calc1)
-
-    x_axis = sorted(set(total_degree))
-    y_axis = [list(total_degree).count(v) / float(len(total_degree)) for v in
-              x_axis]  # count each node and divide by the count of all nodes
-    plt.bar(x_axis, y_axis)
-    plt.xticks(np.arange(min(id_min), max(id_max) + 1))
-    plt.xlabel('Degrees')
-    plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
-    plt.title('REDDIT-MULTI-5K')
-    # plt.yscale("log")
-    plt.savefig("../results/Graph_Distribution/REDDIT-MULTI-5K.png")
+    plot_degree_distribution(total_degree, id_min, id_max)
 
     max_degree = max(id_max)
     min_degree = min(id_min)
+
     diag_matrix = []
 
     for i in unique_graph_indicator:
@@ -139,6 +99,64 @@ def standardGraphFile(dataset):
     print(f'Time taken to run:{time() - start} seconds')
 
 
+def read_data(dataset):
+    data_path = "/project/6058757/taiwo/dataset"  # dataset path on computer
+    edges_asdf = pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
+    edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
+    unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
+    missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
+                     x not in unique_nodes]  # find the missing nodes
+    node_list = unique_nodes + missing_nodes
+    node_list.sort()
+    graph_indicator_list = sum((pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_graph_indicator.txt",
+                                            header=None).values.tolist()), [])
+    graph_labels_list = sum(
+        (pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None).values.tolist()), [])
+    # node_labels_list = sum(
+    # (pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_node_labels.txt", header=None).values.tolist()), [])
+    random_node_labels = [5] * len(node_list)
+    random_dict = list(dict(zip(node_list, random_node_labels)).items())
+    # nodes_dict = list(dict(zip(node_list, node_labels_list)).items())  # makes nodes and their labels as a dict
+    unique_graph_indicator = list(set(graph_indicator_list))  # list unique graphids 100
+
+    random.seed(42)
+
+    return unique_graph_indicator, graph_indicator_list, edges_asdf, random_dict, graph_labels_list
+
+
+def get_degree_value(unique_graph_indicator, graph_indicator_list, edges_asdf):
+    id_max = []
+    id_min = []
+    total_degree = []
+
+    for j in unique_graph_indicator:
+        graph_id1 = j
+        graph_id_loc1 = [index for index, element in enumerate(graph_indicator_list) if
+                         element == graph_id1]  # list the index of the graph_id locations
+        edges_loc1 = edges_asdf[
+            edges_asdf.index.isin(graph_id_loc1)]  # obtain edges that corresponds to these locations
+        a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
+        deg_calc1 = np.asarray(a_graph1.degree())  # obtain node degrees
+        id_max.append(max(deg_calc1))
+        id_min.append(min(deg_calc1))
+        total_degree.extend(deg_calc1)
+
+    return id_max, id_min, total_degree
+
+
+def plot_degree_distribution(total_degree, id_min, id_max):
+    x_axis = sorted(set(total_degree))
+    y_axis = [list(total_degree).count(v) / float(len(total_degree)) for v in
+              x_axis]  # count each node and divide by the count of all nodes
+    plt.bar(x_axis, y_axis)
+    plt.xticks(np.arange(min(id_min), max(id_max) + 1))
+    plt.xlabel('Degrees')
+    plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
+    plt.title('REDDIT-MULTI-5K')
+    # plt.yscale("log")
+    plt.savefig("../results/Graph_Distribution/REDDIT-MULTI-5K.png")
+
+
 if __name__ == '__main__':
-    dataset = 'REDDIT-MULTI-5K'
-    standardGraphFile(dataset)
+    data_set = 'REDDIT-MULTI-5K'
+    standard_graph_file(data_set)
