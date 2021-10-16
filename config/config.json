@@ -23,6 +23,10 @@
     "multi_class": "ovr",
     "fig_size": 7
   },
+  "Kernels_Induced_Subgraph": {
+    "out_tsv_file": "../results/Graph_Distribution/Kernels_Induced_Subgraph.tsv",
+    "graph_dir": "../results/Graph_Distribution/plots/"
+  },
   "dataset": {
     "BZR": {
       "data_path": "../data/BZR/"
