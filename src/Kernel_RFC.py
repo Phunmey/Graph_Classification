@@ -39,11 +39,8 @@ def get_data_and_labels(config):
 
     edges = get_read_csv(config, "_A.txt")
     edges.columns = ["from", "to"]
-    unique_nodes = ((edges["from"].append(edges["to"])).unique()).tolist()
-    missing_nodes = [x for x in range(unique_nodes[0], unique_nodes[-1] + 1) if
-                     x not in unique_nodes]  # find the missing nodes
-    nodes = unique_nodes + missing_nodes
-    nodes.sort()
+    unique_nodes = ((edges['from'].append(edges['to'])).unique()).tolist()
+    nodes = np.arange(min(unique_nodes), max(unique_nodes) + 1)  # list of nodes
     graph_indicators = get_csv_value_sum(config, "_graph_indicator.txt")
     graph_labels = get_csv_value_sum(config, "_graph_labels.txt")
     node_labels = get_csv_value_sum(config, "_node_labels.txt")
