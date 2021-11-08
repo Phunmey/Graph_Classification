@@ -155,7 +155,7 @@ if __name__ == '__main__':
     outputFile = "../results/" + 'kernelTDAResults.txt'
     shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
     output_file = open(outputFile, 'w')
-    # Append 'hello' at the end of file
+
     datapath = "C:/data"  # dataset path on computer
     for dataset_name in datasets:
         standardGraphFile(dataset_name, output_file, datapath, h_filt=True, iter=5)
@@ -164,14 +164,4 @@ if __name__ == '__main__':
 
 # TODO:
 # use reddit-12k, reddit-5k dataset
-# see papers with code to see if there are any weighted graph classification datasets
-# use min and max degrees separately on each dataset
-# use the induced_subgraph function of igraph to construct your subgraphs
-# from the resulting WL kernel matrix of each graph, extract the upper diagonal elements and flatten into a vector
-# use the result above diagonal for your classifier
-# obtain the maximum degree possible for all the graphs in the dataset (this will serve as the limit for epsilon)
 
-# if max(a_graph_degree) > max_degree:
-#   max_degree = max(a_graph_degree)
-# if min(a_graph_degree) < min_degree:
-#   min_degree = min(a_graph_degree)
