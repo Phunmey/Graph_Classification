@@ -13,22 +13,22 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from datetime import datetime
 
 
-def standardGraphFile(dataset, file, datapath):
+def standardGraphFile(dataset, file, datapath, h_filt, iter):
     start = time()
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
     edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
     unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
-    print(dataset+" graph edges are loaded")
+    print(dataset + " graph edges are loaded")
     node_list = np.arange(min(unique_nodes), max(unique_nodes) + 1);  # unique_nodes + missing_nodes
     node_list.sort()
     csv = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_indicator.txt", header=None)
-    print(dataset+" graph indicators are loaded")
+    print(dataset + " graph indicators are loaded")
     csv.columns = ["ID"]
     graphindicator_aslist = ((csv["ID"].values.astype(int)))
     read_csv = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None)
     read_csv.columns = ["ID"]
     graphlabels_aslist = ((read_csv["ID"].values.astype(int)))
-    print(dataset+" graph labels are loaded")
+    print(dataset + " graph labels are loaded")
     random_nodelabels = [5] * len(node_list)
     random_dict = list(dict(zip(node_list, random_nodelabels)).items())
     unique_graphindicator = np.arange(min(graphindicator_aslist),
@@ -48,10 +48,11 @@ def standardGraphFile(dataset, file, datapath):
                         element == graphid1]  # list the index of the graphid locations
         edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
-        deg_calc1 = np.asarray(a_graph1.degree())  # obtain node degrees
-        id_max.append(max(deg_calc1))
-        id_min.append(min(deg_calc1))
-        for i in deg_calc1:
+        activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
+        #activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
+        id_max.append(max(activation_values))
+        id_min.append(min(activation_values))
+        for i in activation_values:
             total_degree[i] = total_degree.get(i, 0) + 1
 
     plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
@@ -63,9 +64,12 @@ def standardGraphFile(dataset, file, datapath):
     # plt.yscale("log")
     plt.savefig("../results/" + dataset + "DegreeStats.png")
     print(dataset + " degree computations are completed.")
-    max_degree = max(id_max)
-    min_degree = min(id_min)
-    print(dataset + " filtration will run from " + str(min_degree) + " to " + str(max_degree))
+    max_activation = max(id_max)
+    #max_activation=np.percentile(id_max, 90)# new line for using betweenness
+    min_activation = min(id_min)
+    if h_filt:
+        max_activation = int(max_activation / 2)
+    print(dataset + " filtration will run from " + str(min_activation) + " to " + str(max_activation))
     diag_matrix = []
     for graphid in unique_graphindicator:
         if graphid % (progress / 10) == 0:
@@ -77,12 +81,12 @@ def standardGraphFile(dataset, file, datapath):
         nodedict_loc = dict([random_dict[pos] for pos in graphid_loc])
 
         a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
-        deg_calc = np.asarray(a_graph.degree())
+        activation_values = np.asarray(a_graph.degree())
+        activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
+        wl_data = [[] for j in range(max_activation - min_activation + 1)]
 
-        wl_data = [[] for j in range(max_degree - min_degree + 1)]
-
-        for deg in np.arange(min_degree, max_degree + 1):
-            deg_loc = (np.where(deg_calc <= deg))[0]  # obtain indices where a degree is the maxdegree
+        for deg in np.arange(min_activation, max_activation + 1):
+            deg_loc = (np.where(activation_values <= deg))[0]  # obtain indices where a degree is the maxdegree
             sub_graph = a_graph.subgraph(deg_loc)  # construct subgraphs from original graph using the indices
             subname = sub_graph.vs["name"]  # the subgraph vertex names
             subdict = [(k, v) for k, v in nodedict_loc.items() for k in
@@ -95,14 +99,14 @@ def standardGraphFile(dataset, file, datapath):
                 index_dict = dict(
                     zip(subname_ids, list(dict_node.values())))  # replace the dict keys with node indices
                 nodes_concat = [subedges, index_dict]
-                wl_data[deg - min_degree].extend(nodes_concat)
+                wl_data[deg - min_activation].extend(nodes_concat)
 
         for e in wl_data:
             if e == []:
                 e.extend([[(-1, -1)], {-1: -1}])
             #  e.extend([[(0, 0)], {0: 0}])
 
-        wl = WeisfeilerLehman(n_iter=5, base_graph_kernel=VertexHistogram, normalize=True)
+        wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
         wl_transform = wl.fit_transform(wl_data)
         upper_diag = wl_transform[np.triu_indices(len(wl_transform), k=1)]
         diag_matrix.append(upper_diag)
@@ -120,39 +124,43 @@ def standardGraphFile(dataset, file, datapath):
     min_samples_split = [2, 5, 10]
     min_samples_leaf = [1, 2, 4]
     bootstrap = [True, False]
-    num_cv=10
+    num_cv = 10
     gridlength = len(n_estimators) * len(max_depth) * len(min_samples_leaf) * len(min_samples_split) * num_cv
-    print(str(gridlength)+" RFs will be created.")
+    print(str(gridlength) + " RFs will be created in the grid search.")
     Param_Grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
     # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
-    print(dataset+" training started at", datetime.now().strftime("%H:%M:%S"))
-    RFC = RandomForestClassifier()
+    print(dataset + " training started at", datetime.now().strftime("%H:%M:%S"))
+    RFC = RandomForestClassifier(n_jobs=10)
     grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=num_cv, n_jobs=10)
     grid.fit(G_train, y_train)
     param_choose = grid.best_params_
 
     RFC_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(G_train, y_train)
-    Test_pred = RFC_pred.predict(G_test)
-    predc = roc_auc_score(y_test, RFC_pred.predict_proba(G_test)[:, 1])
-    score = accuracy_score(y_test, Test_pred)
-    print(dataset + " accuracy is " + str(score))
+    test_pred = RFC_pred.predict(G_test)
+    auc = roc_auc_score(y_test, RFC_pred.predict_proba(G_test)[:, 1])
+    accuracy = accuracy_score(y_test, test_pred)
+    print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
-    print(f'Kernels took {time_taken} seconds, training took {t3-t2} seconds')
-    file.write(dataset + "\t" + str(time_taken) + "\t" + str(score) + "\t" + str(predc) + "\r\n")
+    print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
+    file.write(dataset + "\t" + str(time_taken) +
+               "\t" + str(accuracy) + "\t" + str(auc) +
+               "\t" + str(iter) + "\t" + str(h_filt))
+    file.flush()
 
 
 if __name__ == '__main__':
-    datasets = ('PROTEINS','BZR', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
+    datasets = ('PROTEINS', 'BZR', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
                 'ENZYMES', 'FIRSTMM_DB', 'COX2', 'DHFR')
     outputFile = "../results/" + 'kernelTDAResults.txt'
     shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
-    file = open(outputFile, 'w')
+    output_file = open(outputFile, 'w')
     # Append 'hello' at the end of file
     datapath = "C:/data"  # dataset path on computer
-    for dataset in datasets:
-        standardGraphFile(dataset, file, datapath)
-    file.close()
+    for dataset_name in datasets:
+        standardGraphFile(dataset_name, output_file, datapath, h_filt=True, iter=5)
+        standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=5)
+    output_file.close()
 
 # TODO:
 # use reddit-12k, reddit-5k dataset
