@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from datetime import datetime
 
 
-def standardGraphFile(dataset, file, datapath, h_filt, iter):
+def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
     start = time()
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
     edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
@@ -82,11 +82,18 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter):
 
         a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph.degree())
-        activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
+        #activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
         wl_data = [[] for j in range(max_activation - min_activation + 1)]
 
-        for deg in np.arange(min_activation, max_activation + 1):
-            deg_loc = (np.where(activation_values <= deg))[0]  # obtain indices where a degree is the maxdegree
+        if filtration=="sublevel":
+            filtr_range = np.arange(min_activation, max_activation + 1)
+        else:
+            filtr_range = np.arange(max_activation, min_activation - 1, -1)
+        for deg in filtr_range:
+            if filtration=="sublevel":
+                deg_loc = (np.where(activation_values <= deg))[0]  # obtain indices where a degree is the maxdegree
+            else:
+                deg_loc = (np.where(activation_values >= deg))[0]
             sub_graph = a_graph.subgraph(deg_loc)  # construct subgraphs from original graph using the indices
             subname = sub_graph.vs["name"]  # the subgraph vertex names
             subdict = [(k, v) for k, v in nodedict_loc.items() for k in
@@ -143,14 +150,14 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter):
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
-    file.write(dataset + "\t" + str(time_taken) +
+    file.write(dataset + "\t" + str(time_taken) +"\t"+str(t3 - t2)+
                "\t" + str(accuracy) + "\t" + str(auc) +
-               "\t" + str(iter) + "\t" + str(h_filt))
+               "\t" + str(iter) + "\t" + str(h_filt)+"\n")
     file.flush()
 
 
 if __name__ == '__main__':
-    datasets = ('PROTEINS', 'BZR', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
+    datasets = ( 'BZR','PROTEINS', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
                 'ENZYMES', 'FIRSTMM_DB', 'COX2', 'DHFR')
     outputFile = "../results/" + 'kernelTDAResults.txt'
     shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
@@ -158,8 +165,10 @@ if __name__ == '__main__':
 
     datapath = "C:/data"  # dataset path on computer
     for dataset_name in datasets:
-        standardGraphFile(dataset_name, output_file, datapath, h_filt=True, iter=5)
-        standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=5)
+        for filtr in ('sublevel', 'superlevel'):
+            for half in (True,False):
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr)
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr)
     output_file.close()
 
 # TODO:
