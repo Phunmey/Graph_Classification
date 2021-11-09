@@ -74,7 +74,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
             filtr_range = np.arange(min_activation, max_activation + 1)
     else:
         if h_filt:
-            filtr_range = np.arange(max_activation, int(min_activation / 2) - 1, -1)
+            filtr_range = np.arange(max_activation, int(max_activation / 2) - 1, -1)
         else:
             filtr_range = np.arange(max_activation, min_activation - 1, -1)
     print(dataset + " filtration will run frome " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range)-1]))
@@ -96,7 +96,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
 
         for deg in filtr_range:
             if filtration=="sublevel":
-                deg_loc = (np.where(activation_values <= deg))[0]  # obtain indices where a degree is the maxdegree
+                deg_loc = (np.where(activation_values <= deg))[0]
             else:
                 deg_loc = (np.where(activation_values >= deg))[0]
             sub_graph = a_graph.subgraph(deg_loc)  # construct subgraphs from original graph using the indices
@@ -115,7 +115,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
 
         for e in wl_data:
             if e == []:
-                e.extend([[(-1, -1)], {-1: -1}])
+                e.extend([[(1, 2)], {1: 5, 2:5}])
+                #e.extend([[(-1, -1)], {-1: -1}])
             #  e.extend([[(0, 0)], {0: 0}])
 
         wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
@@ -170,7 +171,7 @@ if __name__ == '__main__':
 
     datapath = "C:/data"  # dataset path on computer
     for dataset_name in datasets:
-        for filtr_type in ('sublevel', 'superlevel'):
+        for filtr_type in ('superlevel','sublevel'):
             for half in (True,False):
                 standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr_type)
     output_file.close()
