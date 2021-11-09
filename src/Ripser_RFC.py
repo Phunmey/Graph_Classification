@@ -1,3 +1,4 @@
+import igraph
 import numpy as np
 from ripser import ripser
 import pandas as pd
