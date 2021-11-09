@@ -129,7 +129,6 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter):
     print(str(gridlength) + " RFs will be created in the grid search.")
     Param_Grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
-    # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
     print(dataset + " training started at", datetime.now().strftime("%H:%M:%S"))
     RFC = RandomForestClassifier(n_jobs=10)
     grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=num_cv, n_jobs=10)
@@ -150,8 +149,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter):
 
 
 if __name__ == '__main__':
-    datasets = ('PROTEINS', 'BZR', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
-                'ENZYMES', 'FIRSTMM_DB', 'COX2', 'DHFR')
+    datasets = ('PROTEINS', 'BZR', 'COX2', 'DHFR', 'ENZYMES', 'FIRSTMM_DB', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
     outputFile = "../results/" + 'kernelTDAResults.txt'
     shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
     output_file = open(outputFile, 'w')
