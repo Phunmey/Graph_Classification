@@ -116,8 +116,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
         for e in wl_data:
             if e == []:
                 e.extend([[(1, 2)], {1: 5, 2:5}])
-                #e.extend([[(-1, -1)], {-1: -1}])
-            #  e.extend([[(0, 0)], {0: 0}])
+                #Approach 2: e.extend([[(-1, -1)], {-1: -1}])
+                #Approach 3: e.extend([[(0, 0)], {0: 0}])
 
         wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
         wl_transform = wl.fit_transform(wl_data)
