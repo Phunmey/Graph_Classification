@@ -67,9 +67,17 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
     max_activation = max(id_max)
     #max_activation=np.percentile(id_max, 90)# new line for using betweenness
     min_activation = min(id_min)
-    if h_filt:
-        max_activation = int(max_activation / 2)
-    print(dataset + " filtration will run from " + str(min_activation) + " to " + str(max_activation))
+    if filtration == "sublevel":
+        if h_filt:
+            filtr_range = np.arange(min_activation, int(max_activation / 2) + 1)
+        else:
+            filtr_range = np.arange(min_activation, max_activation + 1)
+    else:
+        if h_filt:
+            filtr_range = np.arange(max_activation, int(min_activation / 2) - 1, -1)
+        else:
+            filtr_range = np.arange(max_activation, min_activation - 1, -1)
+    print(dataset + " filtration will run frome " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range)-1]))
     diag_matrix = []
     for graphid in unique_graphindicator:
         if graphid % (progress / 10) == 0:
@@ -85,10 +93,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
         #activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
         wl_data = [[] for j in range(max_activation - min_activation + 1)]
 
-        if filtration=="sublevel":
-            filtr_range = np.arange(min_activation, max_activation + 1)
-        else:
-            filtr_range = np.arange(max_activation, min_activation - 1, -1)
+
         for deg in filtr_range:
             if filtration=="sublevel":
                 deg_loc = (np.where(activation_values <= deg))[0]  # obtain indices where a degree is the maxdegree
@@ -150,7 +155,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
-    file.write(dataset + "\t" + str(time_taken) +"\t"+str(t3 - t2)+
+    file.write(dataset + "\t"+filtration+"\t" + str(time_taken) +"\t"+ str(t3 - t2)+
                "\t" + str(accuracy) + "\t" + str(auc) +
                "\t" + str(iter) + "\t" + str(h_filt)+"\n")
     file.flush()
@@ -165,10 +170,9 @@ if __name__ == '__main__':
 
     datapath = "C:/data"  # dataset path on computer
     for dataset_name in datasets:
-        for filtr in ('sublevel', 'superlevel'):
+        for filtr_type in ('sublevel', 'superlevel'):
             for half in (True,False):
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr)
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr)
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr_type)
     output_file.close()
 
 # TODO:
