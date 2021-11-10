@@ -77,7 +77,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
             filtr_range = np.arange(max_activation, int(max_activation / 2) - 1, -1)
         else:
             filtr_range = np.arange(max_activation, min_activation - 1, -1)
-    print(dataset + " filtration will run frome " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range)-1]))
+    print(dataset + " filtration will run from " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range)-1]))
     diag_matrix = []
     for graphid in unique_graphindicator:
         if graphid % (progress / 10) == 0:
@@ -123,11 +123,11 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
         wl_transform = wl.fit_transform(wl_data)
         upper_diag = wl_transform[np.triu_indices(len(wl_transform), k=1)]
         diag_matrix.append(upper_diag)
-    RFC_input = pd.DataFrame(diag_matrix)
+    rfc_input = pd.DataFrame(diag_matrix)
     t2 = time()
     time_taken = t2 - start
     random.seed(42)
-    G_train, G_test, y_train, y_test = train_test_split(RFC_input, graphlabels_aslist, test_size=0.2,
+    g_train, g_test, y_train, y_test = train_test_split(rfc_input, graphlabels_aslist, test_size=0.2,
                                                         random_state=42)
 
     # hyperparameter tuning
@@ -144,14 +144,14 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
     # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
     print(dataset + " training started at", datetime.now().strftime("%H:%M:%S"))
-    RFC = RandomForestClassifier(n_jobs=10)
-    grid = GridSearchCV(estimator=RFC, param_grid=Param_Grid, cv=num_cv, n_jobs=10)
-    grid.fit(G_train, y_train)
+    rfc = RandomForestClassifier(n_jobs=10)
+    grid = GridSearchCV(estimator=rfc, param_grid=Param_Grid, cv=num_cv, n_jobs=10)
+    grid.fit(g_train, y_train)
     param_choose = grid.best_params_
 
-    RFC_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(G_train, y_train)
-    test_pred = RFC_pred.predict(G_test)
-    auc = roc_auc_score(y_test, RFC_pred.predict_proba(G_test)[:, 1])
+    rfc_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(g_train, y_train)
+    test_pred = rfc_pred.predict(g_test)
+    auc = roc_auc_score(y_test, rfc_pred.predict_proba(g_test)[:, 1])
     accuracy = accuracy_score(y_test, test_pred)
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     datasets = ( 'BZR','PROTEINS', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
                 'ENZYMES', 'FIRSTMM_DB', 'COX2', 'DHFR')
     outputFile = "../results/" + 'kernelTDAResults.txt'
-    shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
+    #shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
     output_file = open(outputFile, 'w')
 
     datapath = "C:/data"  # dataset path on computer
