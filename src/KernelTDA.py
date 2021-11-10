@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from datetime import datetime
 
 
-def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
+def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
     start = time()
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
     edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
@@ -163,9 +163,9 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter,filtration):
 
 
 if __name__ == '__main__':
-    datasets = ( 'BZR','PROTEINS', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K',
-                'ENZYMES', 'FIRSTMM_DB', 'COX2', 'DHFR')
-    outputFile = "../results/" + 'kernelTDAResults.txt'
+    datasets = (
+        'BZR', 'PROTEINS', 'COX2', 'DHFR', 'MUTAG', 'DD', 'NCI1', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
+    outputFile = "../results/" + 'kernelTDAResults.xlsx'
     #shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
     output_file = open(outputFile, 'w')
 
