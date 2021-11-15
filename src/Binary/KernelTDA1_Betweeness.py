@@ -47,8 +47,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
                         element == graphid1]  # list the index of the graphid locations
         edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
-        # activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
-        activation_values = [math.ceil(i) for i in np.asarray((a_graph1.betweenness()))]  # obtain betweenness
+        activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
+        # activation_values = [math.ceil(i) for i in np.asarray((a_graph1.betweenness()))]  # obtain betweenness
         id_max.append(max(activation_values))
         id_min.append(min(activation_values))
         for i in activation_values:
@@ -59,8 +59,6 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
     plt.xlabel('Betweeness')
     plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
     plt.title(dataset)
-    # plt.show()
-    # plt.yscale("log")
     # plt.savefig("/home/taiwo/projects/def-cakcora/taiwo/results/" + dataset + "BetweenessStats.png")
     print(dataset + " betweeness computations are completed.")
 
