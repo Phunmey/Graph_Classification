@@ -68,11 +68,11 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     if(max_activation-min_activation)>max_allowed_filtration:
         max_activation=int(np.percentile(id_max, 90))# new line for using betweenness
     print(dataset+" max activation was "+str(max(id_max))+", we will use "+str(max_activation))
-
+    print(dataset + " min activation was " + str(min(id_min)))
 
     if filtration == "sublevel":
         if h_filt:
-            activation2 = int(max_activation / 2)
+            activation2 = int(max_activation / 2)+1
             if (activation2-min_activation)>max_allowed_filtration:
                 filtr_range = np.unique(np.linspace(start=min_activation, stop=activation2, dtype=int, num=100))
             else:
@@ -94,8 +94,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
                 filtr_range = np.flip(
                     np.unique(np.linspace(start=max_activation, stop=min_activation, dtype=int, num=100)))
             else:
-                filtr_range = np.arange(max_activation, min_activation, -1)
-            print(filtr_range)
+                filtr_range = np.arange(max_activation, min_activation-1, -1)
     print(
         dataset + " filtration will run from " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range) - 1]))
     diag_matrix = []
@@ -111,9 +110,9 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
         a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph.degree())
         # activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
-        wl_data = [[] for j in range(max_activation - min_activation + 1)]
+        wl_data = [[] for j in range(0,len(filtr_range))]
 
-        for deg in filtr_range:
+        for indx,deg in enumerate(filtr_range,start=0):
             if filtration == "sublevel":
                 deg_loc = (np.where(activation_values <= deg))[0]
             else:
@@ -130,7 +129,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
                 index_dict = dict(
                     zip(subname_ids, list(dict_node.values())))  # replace the dict keys with node indices
                 nodes_concat = [subedges, index_dict]
-                wl_data[deg - min_activation].extend(nodes_concat)
+                #wl_data[deg - min_activation].extend(nodes_concat)
+                wl_data[indx].extend(nodes_concat)
 
         for e in wl_data:
             if e == []:
@@ -152,10 +152,10 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
 
     # hyperparameter tuning
     max_features = ['auto', 'sqrt']
-    n_estimators = [int(a) for a in np.linspace(start=200, stop=300, num=2)]
-    max_depth = [int(b) for b in np.linspace(start=4, stop=6, num=3)]
-    min_samples_split = [2, 5, 10]
-    min_samples_leaf = [1, 2, 4]
+    n_estimators = [int(a) for a in np.linspace(start=300, stop=300, num=1)]
+    max_depth = [int(b) for b in np.linspace(start=5, stop=6, num=2)]
+    min_samples_split = [2,5]
+    min_samples_leaf = [2]
     bootstrap = [True, False]
     num_cv = 10
     gridlength = len(n_estimators) * len(max_depth) * len(min_samples_leaf) * len(min_samples_split) * num_cv
@@ -184,7 +184,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
 
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
-    datasets = ( 'COX2','MUTAG','DD','BZR', 'PROTEINS',  'DHFR',  'NCI1')
+    datasets = ('MUTAG','BZR','DD', 'PROTEINS',  'DHFR',  'NCI1','COX2')
     outputFile = "../results/" + 'kernelTDAResults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
