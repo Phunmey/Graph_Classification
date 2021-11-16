@@ -1,5 +1,5 @@
 import random
-import shutil
+from datetime import datetime
 from time import time
 
 import matplotlib.pyplot as plt
@@ -10,13 +10,12 @@ from igraph import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split, GridSearchCV
-from datetime import datetime
 
 
-def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
+def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allowed_filtration):
     start = time()
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
-    edges_asdf.columns = ['from', 'to']  # import the graphindicators#import graphlabels  # counting unique graph ids
+    edges_asdf.columns = ['from', 'to']
     unique_nodes = ((edges_asdf['from'].append(edges_asdf['to'])).unique()).tolist()
     print(dataset + " graph edges are loaded")
     node_list = np.arange(min(unique_nodes), max(unique_nodes) + 1);  # unique_nodes + missing_nodes
@@ -49,7 +48,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
         edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
-        #activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
+        # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
         id_max.append(max(activation_values))
         id_min.append(min(activation_values))
         for i in activation_values:
@@ -65,19 +64,40 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
     plt.savefig("../results/" + dataset + "DegreeStats.png")
     print(dataset + " degree computations are completed.")
     max_activation = max(id_max)
-    #max_activation=np.percentile(id_max, 90)# new line for using betweenness
     min_activation = min(id_min)
+    if(max_activation-min_activation)>max_allowed_filtration:
+        max_activation=int(np.percentile(id_max, 90))# new line for using betweenness
+    print(dataset+" max activation was "+str(max(id_max))+", we will use "+str(max_activation))
+
+
     if filtration == "sublevel":
         if h_filt:
-            filtr_range = np.arange(min_activation, int(max_activation / 2) + 1)
+            activation2 = int(max_activation / 2)
+            if (activation2-min_activation)>max_allowed_filtration:
+                filtr_range = np.unique(np.linspace(start=min_activation, stop=activation2, dtype=int, num=100))
+            else:
+                filtr_range = np.arange(min_activation, activation2)
         else:
-            filtr_range = np.arange(min_activation, max_activation + 1)
+            if (max_activation - min_activation) > max_allowed_filtration:
+                filtr_range = np.unique(np.linspace(start=min_activation, stop=max_activation+1,dtype=int, num=100))
+            else:
+                filtr_range = np.arange(min_activation, max_activation+1)
     else:
         if h_filt:
-            filtr_range = np.arange(max_activation, int(max_activation / 2) - 1, -1)
+            activation3 = int(max_activation / 2)-1
+            if (max_activation-activation3)>max_allowed_filtration:
+                filtr_range = np.flip(np.unique(np.linspace(start=max_activation, stop=activation3,dtype=int, num=100)))
+            else:
+                filtr_range = np.arange(max_activation, activation3, -1)
         else:
-            filtr_range = np.arange(max_activation, min_activation - 1, -1)
-    print(dataset + " filtration will run from " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range)-1]))
+            if (max_activation - min_activation) > max_allowed_filtration:
+                filtr_range = np.flip(
+                    np.unique(np.linspace(start=max_activation, stop=min_activation, dtype=int, num=100)))
+            else:
+                filtr_range = np.arange(max_activation, min_activation, -1)
+            print(filtr_range)
+    print(
+        dataset + " filtration will run from " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range) - 1]))
     diag_matrix = []
     for graphid in unique_graphindicator:
         if graphid % (progress / 10) == 0:
@@ -90,12 +110,11 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
 
         a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph.degree())
-        #activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
+        # activation_values =[int(i) for i in np.asarray((a_graph.betweenness()))]
         wl_data = [[] for j in range(max_activation - min_activation + 1)]
 
-
         for deg in filtr_range:
-            if filtration=="sublevel":
+            if filtration == "sublevel":
                 deg_loc = (np.where(activation_values <= deg))[0]
             else:
                 deg_loc = (np.where(activation_values >= deg))[0]
@@ -115,15 +134,16 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
 
         for e in wl_data:
             if e == []:
-                e.extend([[(1, 2)], {1: 5, 2:5}])
-                #Approach 2: e.extend([[(-1, -1)], {-1: -1}])
-                #Approach 3: e.extend([[(0, 0)], {0: 0}])
+                e.extend([[(1, 2)], {1: 5, 2: 5}])
+                # Approach 2: e.extend([[(-1, -1)], {-1: -1}])
+                # Approach 3: e.extend([[(0, 0)], {0: 0}])
 
         wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
         wl_transform = wl.fit_transform(wl_data)
         upper_diag = wl_transform[np.triu_indices(len(wl_transform), k=1)]
         diag_matrix.append(upper_diag)
     rfc_input = pd.DataFrame(diag_matrix)
+    print(dataset+" has a feature matrix of "+str(rfc_input.shape))
     t2 = time()
     time_taken = t2 - start
     random.seed(42)
@@ -156,26 +176,22 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration):
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
-    file.write(dataset + "\t"+filtration+"\t" + str(time_taken) +"\t"+ str(t3 - t2)+
+    file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) +
-               "\t" + str(iter) + "\t" + str(h_filt)+"\n")
+               "\t" + str(iter) + "\t" + str(h_filt) + "\n")
     file.flush()
 
 
 if __name__ == '__main__':
-    datasets = (
-        'BZR', 'PROTEINS', 'COX2', 'DHFR', 'MUTAG', 'DD', 'NCI1', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
-    outputFile = "../results/" + 'kernelTDAResults.xlsx'
-    #shutil.copy(outputFile, '../results/latestresultbackupkernelTDA.txt')
+    datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
+    datasets = ( 'COX2','MUTAG','DD','BZR', 'PROTEINS',  'DHFR',  'NCI1')
+    outputFile = "../results/" + 'kernelTDAResults.csv'
     output_file = open(outputFile, 'w')
-
-    datapath = "C:/data"  # dataset path on computer
     for dataset_name in datasets:
-        for filtr_type in ('superlevel','sublevel'):
-            for half in (True,False):
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration =filtr_type)
+        for filtr_type in ('superlevel', 'sublevel'):
+            for half in (True, False):
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration=filtr_type,max_allowed_filtration=100)
     output_file.close()
 
 # TODO:
 # use reddit-12k, reddit-5k dataset
-
