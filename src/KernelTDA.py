@@ -148,7 +148,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     time_taken = t2 - start
     random.seed(42)
     g_train, g_test, y_train, y_test = train_test_split(rfc_input, graphlabels_aslist, test_size=0.2,
-                                                        random_state=42)
+                                                        random_state=random())
 
     # hyperparameter tuning
     max_features = ['auto', 'sqrt']
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     for dataset_name in datasets:
         for filtr_type in ('superlevel', 'sublevel'):
             for half in (True, False):
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=5, filtration=filtr_type,max_allowed_filtration=100)
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=6, filtration=filtr_type,max_allowed_filtration=100)
     output_file.close()
 
 # TODO:
