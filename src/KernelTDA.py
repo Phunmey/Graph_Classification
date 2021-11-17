@@ -73,7 +73,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     if filtration == "sublevel":
         if h_filt:
             activation2 = int(max_activation / 2)+1
-            if (activation2-min_activation)>max_allowed_filtration:
+            if (activation2-min_activation) > max_allowed_filtration:
                 filtr_range = np.unique(np.linspace(start=min_activation, stop=activation2, dtype=int, num=100))
             else:
                 filtr_range = np.arange(min_activation, activation2)
