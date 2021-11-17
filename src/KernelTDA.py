@@ -185,7 +185,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
 
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
-    datasets = ('MUTAG','BZR','DD', 'PROTEINS',  'DHFR',  'NCI1','COX2')
+    datasets = ('MUTAG', 'BZR', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
     outputFile = "../results/" + 'kernelTDAResults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
