@@ -8,7 +8,7 @@ import pandas as pd
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from igraph import *
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 
@@ -173,11 +173,12 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     test_pred = rfc_pred.predict(g_test)
     auc = roc_auc_score(y_test, rfc_pred.predict_proba(g_test)[:, 1])
     accuracy = accuracy_score(y_test, test_pred)
+    conf_mat = confusion_matrix(y_test, test_pred)
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
     file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
-               "\t" + str(accuracy) + "\t" + str(auc) +
+               "\t" + str(accuracy) + "\t" + str(auc) + "\t" + str(conf_mat) +
                "\t" + str(iter) + "\t" + str(h_filt) + "\n")
     file.flush()
 
