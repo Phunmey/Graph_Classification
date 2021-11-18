@@ -183,7 +183,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     fp = conf_mat[1][0]
     file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) + "\t" +
-               str(tn) + "\t" + str(fn) + "\t" + str(fp) + "\t" + str(tp) +
+               str(tn) + "\t" + str(tp) + "\t" + str(fn) + "\t" + str(fp) +
                "\t" + str(iter) + "\t" + str(h_filt) + "\n")
     file.flush()
 
