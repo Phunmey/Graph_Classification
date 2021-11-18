@@ -177,8 +177,13 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
+    tn = conf_mat[0][0]
+    tp = conf_mat[1][1]
+    fn = conf_mat[0][1]
+    fp = conf_mat[1][0]
     file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
-               "\t" + str(accuracy) + "\t" + str(auc) + "\t" + str(conf_mat) +
+               "\t" + str(accuracy) + "\t" + str(auc) + "\t" +
+               str(tn) + "\t" + str(fn) + "\t" + str(fp) + "\t" + str(tp) +
                "\t" + str(iter) + "\t" + str(h_filt) + "\n")
     file.flush()
 
