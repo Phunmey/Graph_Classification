@@ -148,7 +148,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     time_taken = t2 - start
     random.seed(42)
     g_train, g_test, y_train, y_test = train_test_split(rfc_input, graphlabels_aslist, test_size=0.2,
-                                                        random_state=random())
+                                                        random_state=random.randint(0,100))
 
     # hyperparameter tuning
     max_features = ['auto', 'sqrt']
