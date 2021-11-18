@@ -148,7 +148,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     time_taken = t2 - start
     random.seed(42)
     g_train, g_test, y_train, y_test = train_test_split(rfc_input, graphlabels_aslist, test_size=0.2,
-                                                        random_state=random())
+                                                        random_state=random.randint(0,100))
 
     # hyperparameter tuning
     max_features = ['auto', 'sqrt']
@@ -177,8 +177,13 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
+    tn = conf_mat[0][0]
+    tp = conf_mat[1][1]
+    fn = conf_mat[0][1]
+    fp = conf_mat[1][0]
     file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
-               "\t" + str(accuracy) + "\t" + str(auc) + "\t" + str(conf_mat) +
+               "\t" + str(accuracy) + "\t" + str(auc) + "\t" +
+               str(tn) + "\t" + str(tp) + "\t" + str(fn) + "\t" + str(fp) +
                "\t" + str(iter) + "\t" + str(h_filt) + "\n")
     file.flush()
 
@@ -191,7 +196,9 @@ if __name__ == '__main__':
     for dataset_name in datasets:
         for filtr_type in ('superlevel', 'sublevel'):
             for half in (True, False):
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=6, filtration=filtr_type,max_allowed_filtration=100)
+                for iter_ in (2, 3, 4, 5, 6):
+                    standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=iter_,
+                                      filtration=filtr_type, max_allowed_filtration=100)
     output_file.close()
 
 # TODO:
