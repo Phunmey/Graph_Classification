@@ -196,7 +196,9 @@ if __name__ == '__main__':
     for dataset_name in datasets:
         for filtr_type in ('superlevel', 'sublevel'):
             for half in (True, False):
-                standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=6, filtration=filtr_type,max_allowed_filtration=100)
+                for iter_ in (2, 3, 4, 5, 6):
+                    standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=iter_,
+                                      filtration=filtr_type, max_allowed_filtration=100)
     output_file.close()
 
 # TODO:
