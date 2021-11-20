@@ -96,7 +96,7 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
         y_pred = forest.predict(g_test)
         y_preda = forest.predict_proba(g_test)
         print(pd.crosstab(y_test, y_pred))
-        auc = roc_auc_score(y_test, y_preda, multi_class="ovr")
+        auc = roc_auc_score(y_test, y_preda, multi_class="ovr", average="macro")
         # auc_random = roc_auc_score(y_test, r_prob, multi_class="ovr")
         accuracy = accuracy_score(y_test, y_pred)
         conf_mat = confusion_matrix(y_test, y_pred)
@@ -217,11 +217,11 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, id_max, id_
             total_degree[i] = total_degree.get(i, 0) + 1
     plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
     plt.xticks(np.arange(min(id_min), max(id_max) + 1))
+    plt.yscale("log")
     plt.xlabel('Degrees')
     plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
     plt.title(dataset)
     # plt.show()
-    # plt.yscale("log")
     plt.savefig("../results/" + dataset + "DegreeStats.png")
     print(dataset + " degree computations are completed.")
 
