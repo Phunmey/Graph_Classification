@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 
-def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allowed_filtration):
+def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_allowed_filtration):
     start = time()
     edges_asdf = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
     edges_asdf.columns = ['from', 'to']
@@ -27,8 +27,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     read_csv = pd.read_csv(datapath + "/" + dataset + "/" + dataset + "_graph_labels.txt", header=None)
     read_csv.columns = ["ID"]
     graphlabels_aslist = ((read_csv["ID"].values.astype(int)))
-
     print(dataset + " graph labels are loaded")
+
     random_nodelabels = [5] * len(node_list)
     random_dict = list(dict(zip(node_list, random_nodelabels)).items())
     unique_graphindicator = np.arange(min(graphindicator_aslist),
@@ -63,7 +63,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     random.seed(42)
     g_train, g_test, y_train, y_test = train_test_split(rfc_input, graphlabels_aslist, test_size=0.2,
                                                         random_state=random.randint(0,100))
-
+    print("This is y_train and y_test" + "\t" + str([y_train, y_test]))
     # hyperparameter tuning
     Param_Grid, num_cv = rf_preprocess()
 
@@ -74,14 +74,9 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration,max_allo
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
-    tn = conf_mat[0][0]
-    tp = conf_mat[1][1]
-    fn = conf_mat[0][1]
-    fp = conf_mat[1][0]
     file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
-               "\t" + str(accuracy) + "\t" + str(auc) + "\t" +
-               str(tn) + "\t" + str(tp) + "\t" + str(fn) + "\t" + str(fp) +
-               "\t" + str(iter) + "\t" + str(h_filt) + "\n")
+               "\t" + str(accuracy) + "\t" + str(auc) + "\t" + str(iter) + "\t" + str(h_filt) + "\t" +
+               str(np.matrix.flatten(conf_mat, order='C')) + "\n")
     file.flush()
 
 
@@ -122,7 +117,6 @@ def rf_preprocess():
     print(str(gridlength) + " RFs will be created in the grid search.")
     Param_Grid = dict(max_features=max_features, n_estimators=n_estimators, max_depth=max_depth,
                       min_samples_leaf=min_samples_leaf, min_samples_split=min_samples_split, bootstrap=bootstrap)
-    # Param_Grid= dict(max_features = max_features, n_estimators = n_estimators)
     return Param_Grid, num_cv
 
 
@@ -173,12 +167,14 @@ def filtration_discovery(dataset, filtration, h_filt, max_activation, max_allowe
         if h_filt:
             activation2 = int(max_activation / 2) + 1
             if (activation2 - min_activation) > max_allowed_filtration:
-                filtr_range = np.unique(np.linspace(start=min_activation, stop=activation2, dtype=int, num=100))
+                filtr_range = np.unique(
+                    np.linspace(start=min_activation, stop=activation2, dtype=int, num=max_allowed_filtration))
             else:
                 filtr_range = np.arange(min_activation, activation2)
         else:
             if (max_activation - min_activation) > max_allowed_filtration:
-                filtr_range = np.unique(np.linspace(start=min_activation, stop=max_activation + 1, dtype=int, num=100))
+                filtr_range = np.unique(
+                    np.linspace(start=min_activation, stop=max_activation + 1, dtype=int, num=max_allowed_filtration))
             else:
                 filtr_range = np.arange(min_activation, max_activation + 1)
     else:
@@ -186,13 +182,15 @@ def filtration_discovery(dataset, filtration, h_filt, max_activation, max_allowe
             activation3 = int(max_activation / 2) - 1
             if (max_activation - activation3) > max_allowed_filtration:
                 filtr_range = np.flip(
-                    np.unique(np.linspace(start=max_activation, stop=activation3, dtype=int, num=100)))
+                    np.unique(
+                        np.linspace(start=max_activation, stop=activation3, dtype=int, num=max_allowed_filtration)))
             else:
                 filtr_range = np.arange(max_activation, activation3, -1)
         else:
             if (max_activation - min_activation) > max_allowed_filtration:
                 filtr_range = np.flip(
-                    np.unique(np.linspace(start=max_activation, stop=min_activation, dtype=int, num=100)))
+                    np.unique(
+                        np.linspace(start=max_activation, stop=min_activation, dtype=int, num=max_allowed_filtration)))
             else:
                 filtr_range = np.arange(max_activation, min_activation - 1, -1)
     print(
@@ -213,6 +211,7 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, id_max, id_
         # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
         id_max.append(max(activation_values))
         id_min.append(min(activation_values))
+
         for i in activation_values:
             total_degree[i] = total_degree.get(i, 0) + 1
     plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
