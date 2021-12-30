@@ -233,11 +233,10 @@ if __name__ == '__main__':
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
         for filtr_type in ('sublevel'):
-            for half in (True, False):
-                for iter_ in (2, 3, 4):
-                    for duplication in range(5):
-                        standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=iter_,
-                                          filtration=filtr_type, max_allowed_filtration=10)
+            for iter_ in (2, 3, 4):
+                for duplication in range(5):
+                    standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=iter_,
+                                      filtration=filtr_type, max_allowed_filtration=10)
     output_file.close()
 
 # TODO:
