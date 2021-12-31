@@ -225,10 +225,11 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
         conf_mat = confusion_matrix(y_test, test_pred)
     return accuracy, auc, conf_mat
 
+
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
-    "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
+        "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
     outputFile = "../results/" + 'kernelTDAResults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
