@@ -7,6 +7,7 @@ import pandas as pd
 from igraph import *
 from numpy import inf
 from ripser import ripser
+from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -42,16 +43,17 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         train_id_loc = [index for index, element in enumerate(graph_indicators) if
                         element == train_graph_id]  # list the index of the graphid locations
         train_graph_edges = df_edges[
-            df_edges.index.isin(train_id_loc)]  # obtain edges that corresponds to these locations
-        train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False, weights=True)
-        train_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(train_graph))
-        # [mg, Mg] = [np.nanmin(train_dist_matrix), np.nanmax(train_dist_matrix[train_dist_matrix != np.inf])]
-        train_dist_matrix[train_dist_matrix == inf] = 0
-        # [mi, ma] = [np.nanmin(train_dist_matrix), np.nanmax(train_dist_matrix)]
-        norm_dist_matrix = train_dist_matrix / np.nanmax(train_dist_matrix)
-        # [m, M] = [np.nanmin(norm_dist_matrix), np.nanmax(norm_dist_matrix)]
-        train_diagrams = ripser(norm_dist_matrix, thresh=0.5, maxdim=1, distance_matrix=True)['dgms']
-        # plot(train_diagrams)
+            df_edges['from'].isin(train_id_loc)]  # obtain the edges with source node as train_graph_id
+        train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False,
+                                      weights=True)  # obtain the graph
+        train_dist_matrix = np.asarray(
+            Graph.shortest_paths_dijkstra(train_graph))  # obtain the distance matrix from graph
+        train_dist_matrix[train_dist_matrix == inf] = 0  # replace inf with zero
+        embedding = PCA(n_components=3).fit_transform(train_dist_matrix)  # dimension reduction
+        norm_dist_matrix = embedding / np.nanmax(embedding)  # normalized reduced matrix
+        train_diagrams = ripser(norm_dist_matrix, thresh=0.5, maxdim=1, distance_matrix=False)[
+            'dgms']  # run vietoris-rips filtration
+        # plot_diagrams(train_diagrams)
         # plt.show()
 
         # splitting the dimension into 0 and 1
@@ -83,13 +85,14 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         test_id_loc = [index for index, element in enumerate(graph_indicators) if
                        element == test_graph_id]  # list the index of the graph_id locations
         test_graph_edges = df_edges[
-            df_edges.index.isin(test_id_loc)]  # obtain edges that corresponds to these locations
+            df_edges['from'].isin(test_id_loc)]  # obtain edges that with source node equal to test_id_loc
         test_graph = Graph.TupleList(test_graph_edges.itertuples(index=False), directed=False, weights=True)
         test_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(test_graph))  # obtain the distance matrix
-        test_dist_matrix[test_dist_matrix == inf] = 0
-        # [ni, na] = [np.nanmin(test_dist_matrix), np.nanmax(test_dist_matrix)]
-        norm_test_matrix = test_dist_matrix / np.nanmax(test_dist_matrix)
-        test_diagrams = ripser(norm_test_matrix, thresh=0.5, maxdim=1, distance_matrix=True)['dgms']
+        test_dist_matrix[test_dist_matrix == inf] = 0  # replace inf with zero
+        test_embedding = PCA(n_components=3).fit_transform(test_dist_matrix)
+        norm_test_matrix = test_embedding / np.nanmax(test_embedding)  # normalize distance matrix
+        test_diagrams = ripser(norm_test_matrix, thresh=0.5, maxdim=1, distance_matrix=False)[
+            'dgms']  # run vietoris-rips filtration on the normalized distance matrix
 
         # splitting the dimension into 0 and 1
         test_persisted_0 = test_diagrams[0]
@@ -141,11 +144,9 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         forest = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(train_data, y_train)
         y_pred = forest.predict(test_data)
         y_preda = forest.predict_proba(test_data)
-        print(pd.crosstab(y_test, y_pred))
         auc = roc_auc_score(y_test, y_preda, multi_class="ovr", average="macro")
         accuracy = accuracy_score(y_test, y_pred)
         conf_mat = confusion_matrix(y_test, y_pred)
-        print(conf_mat)
     else:  # binary case
         rfc_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(train_data, y_train)
         test_pred = rfc_pred.predict(test_data)
@@ -155,17 +156,18 @@ def standardGraphFile(dataset, file, data_path, iter, step):
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Ripser took {time_taken} seconds, training took {t3 - t2} seconds')
+    flat_conf_mat = (str(conf_mat.flatten(order='C')))[1:-1]
     file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) +
-               "\t" + str(iter) + "\t" + str(step) + "\t" + str(np.matrix.flatten(conf_mat, order='C')) + "\n")
+               "\t" + str(iter) + "\t" + str(step) + "\t" + str(flat_conf_mat) + "\n")
     file.flush()
 
 
 if __name__ == '__main__':
-    data_path = "/home/taiwo/projects/def-cakcora/taiwo/data"  # dataset path on computer
+    data_path = sys.argv[1]  # dataset path on computer
     datasets = (
-    "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
-    outputFile = "/home/taiwo/projects/def-cakcora/taiwo/results/" + 'RipserTDAResults.csv'
+        'ENZYMES', 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
+    outputFile = "../results/" + 'PCAResults.csv'
     file = open(outputFile, 'w')
     for dataset in datasets:
         for iter_ in (2, 3, 4):
