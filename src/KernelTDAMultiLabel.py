@@ -89,7 +89,8 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
             print(str(graphid1) + "/" + str(progress) + " completed")
         graphid_loc1 = [index for index, element in enumerate(graphindicator_aslist) if
                         element == graphid1]  # list the index of the graphid locations
-        edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
+        edges_loc1 = edges_asdf[
+            edges_asdf['from'].isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
         # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
@@ -149,7 +150,7 @@ def kernelize_graph(feature_matrix, edges_asdf, filtr_range, filtration, graphid
         print(str(graphid) + "/" + str(progress) + " graphs completed")
     graphid_loc = [index for index, element in enumerate(graphindicator_aslist) if
                    element == graphid]  # list the index of the graphid locations
-    edges_loc = edges_asdf[edges_asdf.index.isin(graphid_loc)]  # obtain edges that corresponds to these locations
+    edges_loc = edges_asdf[edges_asdf['from'].isin(graphid_loc)]  # obtain edges that corresponds to these locations
     nodedict_loc = dict([random_dict[pos] for pos in graphid_loc])
     a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
     activation_values = np.asarray(a_graph.degree())

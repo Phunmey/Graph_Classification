@@ -45,9 +45,6 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
                          unique_graphindicator)
     max_activation = max(node_degree_max)  # obtain the maximum of the degree maximums
     min_activation = min(node_degree_min)  # obtain the minimum of the degree minimums
-    # if (max_activation - min_activation) > max_allowed_filtration:
-    #     max_activation = 500
-    #     max_activation = int(np.percentile(node_degree_max, 90))
     print(dataset + " max activation was " + str(max(node_degree_max)) + ", we will use " + str(max_activation))
     print(dataset + " min activation was " + str(min(node_degree_min)))
 
@@ -89,7 +86,8 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
             print(str(graphid1) + "/" + str(progress) + " completed")
         graphid_loc1 = [index for index, element in enumerate(graphindicator_aslist) if
                         element == graphid1]  # list the index of the graphid locations
-        edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
+        edges_loc1 = edges_asdf[
+            edges_asdf['from'].isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
         # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
@@ -98,14 +96,6 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
 
         for i in activation_values:
             total_degree[i] = total_degree.get(i, 0) + 1
-    # plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
-    # plt.xticks(np.arange(min(node_degree_min), max(node_degree_max) + 1))
-    # plt.yscale("log")
-    # plt.xlabel('Degrees')
-    # plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
-    # plt.title(dataset)
-    # # plt.show()
-    # plt.savefig("/home/taiwo/projects/def-cakcora/taiwo/results/" + dataset + "DegreeStats.png")
     print(dataset + " degree computations are completed.")
 
 
@@ -149,7 +139,7 @@ def kernelize_graph(feature_matrix, edges_asdf, filtr_range, filtration, graphid
         print(str(graphid) + "/" + str(progress) + " graphs completed")
     graphid_loc = [index for index, element in enumerate(graphindicator_aslist) if
                    element == graphid]  # list the index of the graphid locations
-    edges_loc = edges_asdf[edges_asdf.index.isin(graphid_loc)]  # obtain edges that corresponds to these locations
+    edges_loc = edges_asdf[edges_asdf['from'].isin(graphid_loc)]  # obtain edges that corresponds to these locations
     nodedict_loc = dict([random_dict[pos] for pos in graphid_loc])
     a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
     activation_values = np.asarray(a_graph.degree())
@@ -213,12 +203,9 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
                                                                                                                 y_train)
         y_pred = forest.predict(g_test)
         y_preda = forest.predict_proba(g_test)
-        # print(pd.crosstab(y_test, y_pred))
         auc = roc_auc_score(y_test, y_preda, multi_class="ovr", average="macro")
-        # auc_random = roc_auc_score(y_test, r_prob, multi_class="ovr")
         accuracy = accuracy_score(y_test, y_pred)
         conf_mat = confusion_matrix(y_test, y_pred)
-    # print(conf_mat)
     else:  # binary case
         rfc_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(g_train, y_train)
         test_pred = rfc_pred.predict(g_test)
@@ -227,17 +214,15 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
         conf_mat = confusion_matrix(y_test, test_pred)
     return accuracy, auc, conf_mat
 
-
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
-        "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
+    'ENZYMES', 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
     outputFile = "../results/" + 'Eigenvectorresults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
-        for filtr_type in ('sublevel'):
-            for iter_ in (2, 3, 4):
-                for duplication in range(5):
-                    standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=iter_,
-                                      filtration=filtr_type, max_allowed_filtration=10)
+        for iter_ in (2, 3, 4):
+            for duplication in range(5):
+                standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=iter_,
+                                  filtration='sublevel', max_allowed_filtration=10)
     output_file.close()
