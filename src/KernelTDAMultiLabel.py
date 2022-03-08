@@ -46,8 +46,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
                          unique_graphindicator)
     max_activation = max(node_degree_max)  # obtain the maximum of the degree maximums
     min_activation = min(node_degree_min)  # obtain the minimum of the degree minimums
-    # if (max_activation-min_activation) > max_allowed_filtration:
-    #     max_activation = int(np.percentile(node_degree_max, 90))
+    if (max_activation - min_activation) > max_allowed_filtration:
+        max_activation = int(np.percentile(node_degree_max, 90))
     print(dataset + " max activation was " + str(max(node_degree_max)) + ", we will use " + str(max_activation))
     print(dataset + " min activation was " + str(min(node_degree_min)))
 
@@ -212,7 +212,7 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
                                                                                                                 y_train)
         y_pred = forest.predict(g_test)
         y_preda = forest.predict_proba(g_test)
-        # print(pd.crosstab(y_test, y_pred))
+        print(pd.crosstab(y_test, y_pred))
         auc = roc_auc_score(y_test, y_preda, multi_class="ovr", average="macro")
         # auc_random = roc_auc_score(y_test, r_prob, multi_class="ovr")
         accuracy = accuracy_score(y_test, y_pred)
@@ -231,14 +231,15 @@ if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
         "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
-    outputFile = "../results/" + 'kernelTDAResults.csv'
+    outputFile = "../results/" + 'MultilabelResults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
-        for filtr_type in ('sublevel'):
-            for iter_ in (2, 3, 4):
-                for duplication in range(5):
-                    standardGraphFile(dataset_name, output_file, datapath, h_filt=False, iter=iter_,
-                                      filtration=filtr_type, max_allowed_filtration=10)
+        for filtr_type in ('superlevel', 'sublevel'):
+            for half in (True, False):
+                for iter_ in (2, 3, 4):
+                    for duplication in range(5):
+                        standardGraphFile(dataset_name, output_file, datapath, h_filt=half, iter=iter_,
+                                          filtration=filtr_type, max_allowed_filtration=100)
     output_file.close()
 
 # TODO:

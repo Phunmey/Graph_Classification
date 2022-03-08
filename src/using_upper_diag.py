@@ -34,7 +34,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
     unique_graphindicator = np.arange(min(graphindicator_aslist),
                                       max(graphindicator_aslist) + 1)  # list unique graphids 100
 
-    random.seed(27)
+    random.seed(123)
 
     progress = len(unique_graphindicator)
     total_degree = {}
@@ -47,7 +47,8 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
     max_activation = max(node_degree_max)  # obtain the maximum of the degree maximums
     min_activation = min(node_degree_min)  # obtain the minimum of the degree minimums
     # if (max_activation-min_activation) > max_allowed_filtration:
-    #     max_activation = int(np.percentile(node_degree_max, 90))
+    #     max_activation = 500
+    # max_activation = int(np.percentile(node_degree_max, 90))
     print(dataset + " max activation was " + str(max(node_degree_max)) + ", we will use " + str(max_activation))
     print(dataset + " min activation was " + str(min(node_degree_min)))
 
@@ -75,9 +76,10 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
     print(dataset + " accuracy is " + str(accuracy) + ", AUC is " + str(auc))
     t3 = time()
     print(f'Kernels took {time_taken} seconds, training took {t3 - t2} seconds')
-    file.write(dataset + "\t" + filtration + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
+    flat_conf_mat = (str(conf_mat.flatten(order='C')))[1:-1]
+    file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) + "\t" + str(iter) + "\t" + str(h_filt) + "\t" +
-               str(conf_mat.flatten(order='C')) + "\n")
+               str(flat_conf_mat) + "\n")
     file.flush()
 
 
@@ -89,7 +91,8 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
             print(str(graphid1) + "/" + str(progress) + " completed")
         graphid_loc1 = [index for index, element in enumerate(graphindicator_aslist) if
                         element == graphid1]  # list the index of the graphid locations
-        edges_loc1 = edges_asdf[edges_asdf.index.isin(graphid_loc1)]  # obtain edges that corresponds to these locations
+        edges_loc1 = edges_asdf[
+            edges_asdf['from'].isin(graphid_loc1)]  # obtain edges that corresponds to these locations
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
         # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
@@ -100,14 +103,13 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
             total_degree[i] = total_degree.get(i, 0) + 1
     plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
     plt.xticks(np.arange(min(node_degree_min), max(node_degree_max) + 1))
-    # plt.yscale()
+    plt.yscale('log')
     plt.xlabel('Degrees')
     plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
     plt.title(dataset)
     # plt.show()
-    # plt.savefig("../results/" + dataset + "DegreeStats.png")
+    plt.savefig("/home/taiwo/projects/def-cakcora/taiwo/results/" + dataset + "DegreeStats.png")
     print(dataset + " degree computations are completed.")
-
 
 def filtration_discovery(dataset, filtration, h_filt, max_activation, max_allowed_filtration, min_activation):
     if filtration == "sublevel":
@@ -142,14 +144,13 @@ def filtration_discovery(dataset, filtration, h_filt, max_activation, max_allowe
         dataset + " filtration will run from " + str(filtr_range[0]) + " to " + str(filtr_range[len(filtr_range) - 1]))
     return filtr_range
 
-
 def kernelize_graph(feature_matrix, edges_asdf, filtr_range, filtration, graphid, graphindicator_aslist, iter, progress,
                     random_dict):
     if graphid % (progress / 10) == 0:
         print(str(graphid) + "/" + str(progress) + " graphs completed")
     graphid_loc = [index for index, element in enumerate(graphindicator_aslist) if
                    element == graphid]  # list the index of the graphid locations
-    edges_loc = edges_asdf[edges_asdf.index.isin(graphid_loc)]  # obtain edges that corresponds to these locations
+    edges_loc = edges_asdf[edges_asdf['from'].isin(graphid_loc)]  # obtain edges that corresponds to these locations
     nodedict_loc = dict([random_dict[pos] for pos in graphid_loc])
     a_graph = Graph.TupleList(edges_loc.itertuples(index=False), directed=False, weights=True)
     activation_values = np.asarray(a_graph.degree())
@@ -181,9 +182,10 @@ def kernelize_graph(feature_matrix, edges_asdf, filtr_range, filtration, graphid
             # Approach 3: e.extend([[(0, 0)], {0: 0}])
     wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
     wl_transform = wl.fit_transform(wl_data)
+    # eigen_value, eigen_vector = np.linalg.eig(wl_transform)
+    # compute_mean = np.mean(eigen_value, axis=0)
     upper_diag = wl_transform[np.triu_indices(len(wl_transform), k=1)]
     feature_matrix.append(upper_diag)
-
 
 def rf_preprocess():
     max_features = ['auto', 'sqrt']
@@ -207,8 +209,7 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
     param_choose = grid.best_params_
     if len(set(y_test)) > 2:  # multiclass case
         print(dataset + " requires multi class RF")
-        forest = RandomForestClassifier(**param_choose, random_state=1, verbose=1, class_weight='balanced').fit(g_train,
-                                                                                                                y_train)
+        forest = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(g_train, y_train)
         y_pred = forest.predict(g_test)
         y_preda = forest.predict_proba(g_test)
         # print(pd.crosstab(y_test, y_pred))
@@ -225,12 +226,11 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
         conf_mat = confusion_matrix(y_test, test_pred)
     return accuracy, auc, conf_mat
 
-
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
-        "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
-    outputFile = "../results/" + 'kernelTDAResults.csv'
+    "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", "ENZYMES", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
+    outputFile = "../results/" + 'upperdiag.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
         for filtr_type in ('sublevel'):

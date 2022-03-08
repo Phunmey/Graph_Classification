@@ -1,18 +1,12 @@
+import gudhi as gd
 import numpy as np
-from ripser import ripser
-from persim import plot_diagrams
 import pandas as pd
 from igraph import *
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-import gudhi as gd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.manifold import MDS
 from numpy import inf
-#from sklearn.preprocessing import StandardScaler
-#from sklearn import preprocessing
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.manifold import MDS
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
 
 def standardGraphFile(dataset):

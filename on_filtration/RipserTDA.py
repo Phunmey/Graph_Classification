@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 
-def standardGraphFile(dataset, file, data_path, iter, step):
+def standardGraphFile(dataset, file, data_path, thresh):
     start = time()
 
     df_edges = pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
@@ -44,9 +44,9 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         train_graph_edges = df_edges[df_edges['from'].isin(train_id_loc)]
         train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False, weights=True)
         train_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(train_graph))
-        train_dist_matrix[train_dist_matrix == inf] = 0
-        norm_dist_matrix = train_dist_matrix / np.nanmax(train_dist_matrix)
-        train_diagrams = ripser(norm_dist_matrix, thresh=0.5, maxdim=1, distance_matrix=True)['dgms']
+        #  train_dist_matrix[train_dist_matrix == inf] = 0
+        norm_dist_matrix = train_dist_matrix / np.nanmax(train_dist_matrix[train_dist_matrix != np.inf])
+        train_diagrams = ripser(norm_dist_matrix, thresh=thresh, maxdim=1, distance_matrix=True)['dgms']
         # plot_diagrams(train_diagrams)
         # plt.show()
 
@@ -55,21 +55,21 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         train_persist_1 = train_diagrams[1]
 
         # obtain betti numbers for the unique dimensions
-        threshold = np.arange(0, np.nanmax(norm_dist_matrix) + step, step)
+        # threshold = np.arange(0, np.nanmax(norm_dist_matrix[norm_dist_matrix != np.inf]) + step, step)
         train_betti_0 = []
         train_betti_1 = []
-        for j in threshold:
-            b_0 = 0
-            for k in train_persist_0:
-                if k[0] <= j and k[1] > j:
-                    b_0 = b_0 + 1
-            train_betti_0.append(b_0)
 
-            b_1 = 0
-            for l in train_persist_1:
-                if l[0] <= j and l[1] > j:
-                    b_1 = b_1 + 1
-            train_betti_1.append(b_1)
+        b_0 = 0
+        for k in train_persist_0:
+            if k[0] <= thresh and k[1] > thresh:
+                b_0 = b_0 + 1
+        train_betti_0.append(b_0)
+
+        b_1 = 0
+        for l in train_persist_1:
+            if l[0] <= thresh and l[1] > thresh:
+                b_1 = b_1 + 1
+        train_betti_1.append(b_1)
 
         train_bet.append(train_betti_0 + train_betti_1)  # concatenate betti numbers
 
@@ -83,8 +83,9 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         test_graph = Graph.TupleList(test_graph_edges.itertuples(index=False), directed=False, weights=True)
         test_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(test_graph))  # obtain the distance matrix
         test_dist_matrix[test_dist_matrix == inf] = 0  # replace inf with zero
-        norm_test_matrix = test_dist_matrix / np.nanmax(test_dist_matrix)  # normalize distance matrix
-        test_diagrams = ripser(norm_test_matrix, thresh=0.5, maxdim=1, distance_matrix=True)[
+        norm_test_matrix = test_dist_matrix / np.nanmax(
+            test_dist_matrix[test_dist_matrix != np.inf])  # normalize distance matrix
+        test_diagrams = ripser(norm_test_matrix, thresh=thresh, maxdim=1, distance_matrix=True)[
             'dgms']  # run vietoris-rips filtartion on the normalized distance matrix
 
         # splitting the dimension into 0 and 1
@@ -93,18 +94,17 @@ def standardGraphFile(dataset, file, data_path, iter, step):
 
         test_betti_0 = []
         test_betti_1 = []
-        for q in threshold:
-            b_0 = 0
-            for h in test_persisted_0:
-                if h[0] <= q and h[1] > q:
-                    b_0 = b_0 + 1
-            test_betti_0.append(b_0)
+        b_0 = 0
+        for h in test_persisted_0:
+            if h[0] <= thresh and h[1] > thresh:
+                b_0 = b_0 + 1
+        test_betti_0.append(b_0)
 
-            b_1 = 0
-            for y in test_persisted_1:
-                if y[0] <= q and y[1] > q:
-                    b_1 = b_1 + 1
-            test_betti_1.append(b_1)
+        b_1 = 0
+        for y in test_persisted_1:
+            if y[0] <= thresh and y[1] > thresh:
+                b_1 = b_1 + 1
+        test_betti_1.append(b_1)
 
         test_bet.append(test_betti_0 + test_betti_1)  # concatenate betti numbers
 
@@ -152,7 +152,7 @@ def standardGraphFile(dataset, file, data_path, iter, step):
     flat_conf_mat = (str(conf_mat.flatten(order='C')))[1:-1]
     file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) +
-               "\t" + str(iter) + "\t" + str(step) + "\t" + str(flat_conf_mat) + "\n")
+               "\t" + str(thresh) + "\t" + str(flat_conf_mat) + "\n")
     file.flush()
 
 
@@ -163,8 +163,7 @@ if __name__ == '__main__':
     outputFile = "../results/" + 'RipserTDAResults.csv'
     file = open(outputFile, 'w')
     for dataset in datasets:
-        for iter_ in (2, 3, 4):
-            for step_ in (0.05, 0.1, 0.15, 0.2, 0.5):
-                for duplication in np.arange(5):
-                    standardGraphFile(dataset, file, data_path, iter=iter_, step=step_)
+        for threshold in np.arange(0.2, 1 + 0.1, 0.2):
+            for duplication in np.arange(5):
+                standardGraphFile(dataset, file, data_path, thresh=threshold)
     file.close()

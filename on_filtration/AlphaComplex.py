@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 
-def standardGraphFile(dataset, file, data_path, iter, step):
+def standardGraphFile(dataset, file, data_path, thresh):
     start = time()
 
     df_edges = pd.read_csv(data_path + "/" + dataset + "/" + dataset + "_A.txt", header=None)  # import edge data
@@ -45,9 +45,9 @@ def standardGraphFile(dataset, file, data_path, iter, step):
         train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False, weights=True)
         train_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(train_graph))
         train_dist_matrix[train_dist_matrix == inf] = 0
-        sym_matrix = np.matmul(train_dist_matrix, train_dist_matrix.T)  # obtain a symmetric matrix
-        [min1, max1] = [np.nanmin(sym_matrix), np.nanmax(sym_matrix[sym_matrix != np.inf])]
-        norm_dist_matrix = sym_matrix / max1  # normalized distancematrix
+        # sym_matrix = np.matmul(train_dist_matrix, train_dist_matrix.T)  # obtain a symmetric matrix
+        # [min1, max1] = [np.nanmin(sym_matrix), np.nanmax(sym_matrix[sym_matrix != np.inf])]
+        norm_dist_matrix = train_dist_matrix / np.nanmax(train_dist_matrix)  # normalized distancematrix
         train_alpha_complex = gd.AlphaComplex(points=norm_dist_matrix)
         train_simplex_tree = train_alpha_complex.create_simplex_tree()
         train_diagrams = np.asarray(train_simplex_tree.persistence(), dtype='object')
@@ -56,13 +56,14 @@ def standardGraphFile(dataset, file, data_path, iter, step):
 
         # splitting the dimension into 0 and 1
         train_persist_0 = train_diagrams[0]
+        print(train_persist_0)
         train_persist_1 = train_diagrams[1]
-
+        print(train_persist_1)
         # obtain betti numbers for the unique dimensions
-        threshold = np.arange(0, np.nanmax(norm_dist_matrix) + step, step)
+        # threshold = np.arange(0, np.nanmax(norm_dist_matrix) + step, step)
         train_betti_0 = []
         train_betti_1 = []
-        for j in threshold:
+        for j in thresh:
             b_0 = 0
             for k in train_persist_0:
                 if k[0] <= j and k[1] > j:
@@ -103,7 +104,7 @@ def standardGraphFile(dataset, file, data_path, iter, step):
 
         test_betti_0 = []
         test_betti_1 = []
-        for q in threshold:
+        for q in thresh:
             b_0 = 0
             for h in test_persisted_0:
                 if h[0] <= q and h[1] > q:
@@ -162,7 +163,7 @@ def standardGraphFile(dataset, file, data_path, iter, step):
     flat_conf_mat = (str(conf_mat.flatten(order='C')))[1:-1]
     file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
                "\t" + str(accuracy) + "\t" + str(auc) +
-               "\t" + str(iter) + "\t" + str(step) + "\t" + str(flat_conf_mat) + "\n")
+               "\t" + str(thresh) + "\t" + str(flat_conf_mat) + "\n")
     file.flush()
 
 
@@ -173,8 +174,7 @@ if __name__ == '__main__':
     outputFile = "../results/" + 'Alphacomplexresult.csv'
     file = open(outputFile, 'w')
     for dataset in datasets:
-        for iter_ in (2, 3, 4):
-            for step_ in (0.05, 0.1, 0.15, 0.2, 0.5):
-                for duplication in np.arange(5):
-                    standardGraphFile(dataset, file, data_path, iter=iter_, step=step_)
+        for threshold in (0.2, 0.5, 0.75, 1):
+            for duplication in np.arange(5):
+                standardGraphFile(dataset, file, data_path, thresh=threshold)
     file.close()

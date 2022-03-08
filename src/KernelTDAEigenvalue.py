@@ -5,6 +5,7 @@ from time import time
 import numpy as np
 import pandas as pd
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
+from grakel.kernels.core_framework import CoreFramework
 from igraph import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
@@ -80,8 +81,7 @@ def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_all
 
 
 def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree_max, node_degree_min, progress,
-                         total_degree,
-                         unique_graphindicator):
+                         total_degree, unique_graphindicator):
     for graphid1 in unique_graphindicator:
         if graphid1 % (progress / 100) == 0:
             print(str(graphid1) + "/" + str(progress) + " completed")
@@ -89,6 +89,7 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
                         element == graphid1]  # list the index of the graphid locations
         edges_loc1 = edges_asdf[
             edges_asdf['from'].isin(graphid_loc1)]  # obtain edges that corresponds to these locations
+
         a_graph1 = Graph.TupleList(edges_loc1.itertuples(index=False), directed=False, weights=True)
         activation_values = np.asarray(a_graph1.degree())  # obtain node degrees
         # activation_values = [int(i) for i in np.asarray((a_graph1.betweenness()))] #obtain betweenness
@@ -97,15 +98,17 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
 
         for i in activation_values:
             total_degree[i] = total_degree.get(i, 0) + 1
-    # plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
-    # plt.xticks(np.arange(min(node_degree_min), max(node_degree_max) + 1))
-    # #plt.yscale()
-    # plt.xlabel('Degrees')
-    # plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
-    # plt.title(dataset)
-    # # plt.show()
-    # plt.savefig("/home/taiwo/projects/def-cakcora/taiwo/results/" + dataset + "DegreeStats.png")
-    print(dataset + " degree computations are completed.")
+
+
+#  plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
+#  plt.xticks(np.arange(min(node_degree_min), max(node_degree_max) + 1))
+# # plt.yscale('log')
+#  plt.xlabel('Degrees')
+#  plt.ylabel('Fraction of nodes')  # obtained by dividing the node count of the filtration by the data node count
+#  plt.title(dataset)
+#  plt.show()
+#  # plt.savefig("/home/taiwo/projects/def-cakcora/taiwo/results/" + dataset + "DegreeStats.png")
+#  print(dataset + " degree computations are completed.")
 
 
 def filtration_discovery(dataset, filtration, h_filt, max_activation, max_allowed_filtration, min_activation):
@@ -178,8 +181,11 @@ def kernelize_graph(feature_matrix, edges_asdf, filtr_range, filtration, graphid
             e.extend([[(1, 2)], {1: 5, 2: 5}])
             # Approach 2: e.extend([[(-1, -1)], {-1: -1}])
             # Approach 3: e.extend([[(0, 0)], {0: 0}])
-    wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
-    wl_transform = wl.fit_transform(wl_data)
+    bk = (WeisfeilerLehman, dict(base_graph_kernel=VertexHistogram))
+    ck = CoreFramework(base_graph_kernel=bk, min_core=-1, verbose=True)
+
+    # wl = WeisfeilerLehman(n_iter=iter, base_graph_kernel=VertexHistogram, normalize=True)
+    wl_transform = ck.fit_transform(wl_data)
     eigen_value, eigen_vector = np.linalg.eig(wl_transform)
     # compute_mean = np.mean(eigen_value, axis=0)
     # upper_diag = wl_transform[np.triu_indices(len(wl_transform), k=1)]
@@ -211,12 +217,9 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
         forest = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(g_train, y_train)
         y_pred = forest.predict(g_test)
         y_preda = forest.predict_proba(g_test)
-        # print(pd.crosstab(y_test, y_pred))
         auc = roc_auc_score(y_test, y_preda, multi_class="ovr", average="macro")
-        # auc_random = roc_auc_score(y_test, r_prob, multi_class="ovr")
         accuracy = accuracy_score(y_test, y_pred)
         conf_mat = confusion_matrix(y_test, y_pred)
-    # print(conf_mat)
     else:  # binary case
         rfc_pred = RandomForestClassifier(**param_choose, random_state=1, verbose=1).fit(g_train, y_train)
         test_pred = rfc_pred.predict(g_test)
@@ -229,7 +232,7 @@ def train_test_rf(Param_Grid, dataset, g_test, g_train, num_cv, y_test, y_train)
 if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
-    'ENZYMES', 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
+        'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'ENZYMES', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
     outputFile = "../results/" + 'Eigenvalueresults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
