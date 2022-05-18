@@ -1,8 +1,10 @@
 import random
+import sys
 
 import numpy as np
 import pandas as pd
 from igraph import *
+import statistics
 
 
 def standardGraphFile(dataset, data_path):
@@ -25,13 +27,13 @@ def standardGraphFile(dataset, data_path):
     graph_density = []
     graph_diameter = []
     clustering_coeff = []
-    laplacian_ = []
+    spectral_gap_ = []
     assortativity_ = []
-    automorphisms_ = []
+   # automorphisms_ = []
     cliques = []
     motifs = []
     components = []
-    chordality_ = []
+   # chordality_ = []
     for i in unique_graph_indicator:
         train_graph_id = i
         train_id_loc = [index for index, element in enumerate(graph_indicators) if
@@ -40,56 +42,49 @@ def standardGraphFile(dataset, data_path):
             df_edges['from'].isin(train_id_loc)]  # obtain the edges with source node as train_graph_id
         train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False,
                                       weights=True)  # obtain the graph
-        Density = train_graph.density()  # obtain density
-        Diameter = train_graph.diameter()  # obtain diameter
-        cluster_coeff = train_graph.transitivity_avglocal_undirected()  # obtain transitivity
-        laplacian = train_graph.laplacian()  # obtain laplacian matrix
+        Density = train_graph.density() #obtain density
+        Diameter = train_graph.diameter() #obtain diameter
+        cluster_coeff = train_graph.transitivity_avglocal_undirected() #obtain transitivity
+        laplacian = train_graph.laplacian() #obtain laplacian matrix
         laplace_eigenvalue = np.linalg.eig(laplacian)
         sort_eigenvalue = sorted(np.real(laplace_eigenvalue[0]), reverse=True)
-        spectral_gap = sort_eigenvalue[0] - sort_eigenvalue[1]  # obtain spectral gap
-        assortativity = train_graph.assortativity_degree()  # obtain assortativity
-        # automorphisms = train_graph.count_automorphisms_vf2() #obtain automorphisms
-        clique_count = train_graph.clique_number()  # obtain clique count
-        motifs_count = train_graph.motifs_randesu_no()  # obtain motif count
-        count_components = len(train_graph.clusters())  # obtain count components
-        chordality = train_graph.is_chordal()  # is the graph chordal or not
+        spectral_gap = sort_eigenvalue[0]-sort_eigenvalue[1] #obtain spectral gap
+        assortativity = train_graph.assortativity_degree() #obtain assortativity
+       # automorphisms = train_graph.count_automorphisms_vf2() #obtain automorphisms
+        clique_count = train_graph.clique_number() #obtain clique count
+        motifs_count = train_graph.motifs_randesu(size=4) #obtain motif count
+        count_components = len(train_graph.clusters()) #obtain count components
+       # chordality = train_graph.chordality() #is the graph chordal or not
 
         graph_density.append(Density)
         graph_diameter.append(Diameter)
         clustering_coeff.append(cluster_coeff)
-        laplacian_.append(spectral_gap)
+        spectral_gap_.append(spectral_gap)
         assortativity_.append(assortativity)
-        # automorphisms_.append(automorphisms)
+       # automorphisms_.append(automorphisms)
         cliques.append(clique_count)
-        motifs.append(motifs_count)
+        motifs.append(str(motifs_count)[1:-1])
         components.append(count_components)
-        chordality_.append(int(chordality))
+       # chordality_.append(int(chordality))
 
     df = pd.DataFrame(
-        data=zip(graph_density, graph_diameter, clustering_coeff, laplacian_, assortativity_, cliques, motifs,
-                 components, chordality_),
+        data=zip(graph_density, graph_diameter, clustering_coeff, spectral_gap_, assortativity_, cliques, motifs,
+                 components),
         columns=['graph_density', 'graph_diameter', 'clustering_coeff', 'laplacian', 'assortativity', 'cliques',
-                 'motifs', 'components', 'chordality'], index=None)
-    df.insert(0, 'dataset', [dataset] + [''] * (len(df) - 1))
+                 'motifs', 'components'])
+    
+    df.insert(0, 'dataset', dataset)
 
-    return (df)
-
+    return(df)
 
 if __name__ == '__main__':
     data_path = sys.argv[1]  # dataset path on computer
-    datasets = ('ENZYMES', 'BZR')
-    size = ['600', '405']
-    nodes = ['32.63', '35.75']
-    edges = ['62.14', '38.36']
-    classes = ['6', '2']
+    datasets = ('ENZYMES', 'BZR', 'MUTAG', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
     df1 = []
     for dataset in datasets:
-        for s in size:
-            for n in nodes:
-                for e in edges:
-                    for c in classes:
-                        func = standardGraphFile(dataset, data_path)
+        func = standardGraphFile(dataset, data_path)
         df1.append(func)
     df2 = pd.concat(df1)
 
-    df2.to_csv("C:\\Code\\New_Results\\6statistics.csv")
+    df2.to_csv("C:/Code/src/statistics.csv")
+

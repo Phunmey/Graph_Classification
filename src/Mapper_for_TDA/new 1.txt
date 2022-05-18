@@ -1,0 +1,38 @@
+import pandas as pd
+from sklearn import manifold
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import MinMaxScaler
+import kmapper as km
+import sklearn
+statistics = "C:/Users/etr/PycharmProjects/chainletorbits/statistics.csv"
+merged_df = pd.read_csv(statistics, sep=",")
+merged_df = merged_df.drop(["index"], axis=1)
+df2=merged_df.groupby(['dataset']).apply(lambda grp: grp.sample(n=187))#mutag has 188 graphs
+
+#M=merged_df.head(2000)
+y = df2.dataset
+M = df2[df2.columns[1:52]].apply(pd.to_numeric)
+
+
+Xfilt = M
+cls =len(pd.unique(y))
+mapper = km.KeplerMapper()
+scaler = MinMaxScaler(feature_range=(0, 1))
+print(list(M.columns))
+Xfilt = scaler.fit_transform(Xfilt)
+lens = mapper.fit_transform(Xfilt, projection=sklearn.manifold.TSNE(verbose=1))
+print(" mapper started with "+str(len(pd.DataFrame(Xfilt).index))+" data points,"+str(cls)+" clusters")
+graph = mapper.map(
+    lens,
+    Xfilt,
+    clusterer=sklearn.cluster.KMeans(n_clusters=cls, random_state=1618033),
+    #clusterer=DBSCAN(eps=0.003, min_samples=2),
+    cover=km.Cover(n_cubes=10, perc_overlap=0.3)
+)
+print(" mapper ended")
+print(str(len(y))+" "+str(len(Xfilt)))
+html = mapper.visualize(
+    graph,
+    path_html="C:/Users/etr/PycharmProjects/chainletorbits/orbit.html",
+    title="orbit data",
+    custom_tooltips=y.to_numpy())

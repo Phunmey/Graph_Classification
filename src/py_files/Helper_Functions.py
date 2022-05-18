@@ -77,7 +77,7 @@ def get_configs(script_name):
     return: list of config dictionaries
     credit: Jon Brownell and Simon Powell
     """
-    config_file = "../config/config.json"  # relative path to config file
+    config_file = "../../config/config.json"  # relative path to config file
     with open(config_file, 'rt') as f:
         config_full = json.load(f)
 

@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 
 from Helper_Functions import *
-from src.Kernels import *
+from src.py_files.Kernels import *
 
 
 def standard_graph_file(config):
