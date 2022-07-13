@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Code.iml" filepath="$PROJECT_DIR$/.idea/Code.iml" />
+      <module fileurl="file://$USER_HOME$/Documents/.idea/Documents.iml" filepath="$USER_HOME$/Documents/.idea/Documents.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Filtration_curves/.idea/Filtration_curves.iml" filepath="$PROJECT_DIR$/../Filtration_curves/.idea/Filtration_curves.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/Topological-Data/Topological-Data-Analysis-main/.idea/Topological-Data-Analysis-main.iml" filepath="$USER_HOME$/Desktop/Topological-Data/Topological-Data-Analysis-main/.idea/Topological-Data-Analysis-main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../filtration_curves-main/.idea/filtration_curves-main.iml" filepath="$PROJECT_DIR$/../filtration_curves-main/.idea/filtration_curves-main.iml" />
+    </modules>
+  </component>
+</project>

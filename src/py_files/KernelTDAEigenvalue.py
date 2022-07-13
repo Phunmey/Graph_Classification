@@ -1,15 +1,14 @@
-import random
-from datetime import datetime
-from time import time
-
 import numpy as np
 import pandas as pd
+import random
+from datetime import datetime
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from grakel.kernels.core_framework import CoreFramework
 from igraph import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
+from time import time
 
 
 def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_allowed_filtration):
@@ -98,8 +97,6 @@ def activation_discovery(dataset, edges_asdf, graphindicator_aslist, node_degree
 
         for i in activation_values:
             total_degree[i] = total_degree.get(i, 0) + 1
-
-
 #  plt.bar(total_degree.keys(), total_degree.values(), 1, color='b')
 #  plt.xticks(np.arange(min(node_degree_min), max(node_degree_max) + 1))
 # # plt.yscale('log')

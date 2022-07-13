@@ -1,57 +1,57 @@
-import pandas as pd
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import plot_confusion_matrix
-import shap
+import pandas as pd
 import random
+import shap
+from sklearn import metrics
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 
 random.seed(10)
-plt.rcParams.update({'figure.figsize': (16.0, 14.0)})  # set plotsize for all figures to be drawn
-plt.rcParams.update({'font.size': 12})  # set plot font_size for figures
+# plt.rcParams.update({'figure.figsize': (16.0, 14.0)})  # set plotsize for all figures to be drawn
+# plt.rcParams.update({'font.size': 12})  # set plot font_size for figures
 
-statistics = "C:/Code/src/Mapper_for_TDA/statistics.csv"
-merged_df = pd.read_csv(statistics, sep=",")
-merged_df = merged_df.drop(["Index", "graphlabel", "motif1", "motif2"], axis=1)
+def read_csv(datapath):
+    read_df = pd.read_csv(datapath, sep=",")
+    read_df = read_df.drop(["Index", "dataset", "motif1", "motif2"], axis=1)
 
-X = merged_df[merged_df.columns[1:]].apply(pd.to_numeric)
-X = X.fillna(0)  # Features
-y = merged_df['dataset']  # Labels to be predicted
+    X = read_df[read_df.columns[1:]].apply(pd.to_numeric)
+    X = X.fillna(0)  # Features
+    y = read_df['dataset']  # Labels to be predicted
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-######################
-# random forest
-clf = RandomForestClassifier(n_estimators=300).fit(X_train, y_train)
-y_pred = clf.predict(X_test)
+    return X_train, X_test, y_train, y_test, y
 
-print("Random Forest Accuracy: ", metrics.accuracy_score(y_test, y_pred))
+def random_forest(X_train, X_test, y_train, y_test, y):
+    clf = RandomForestClassifier(n_estimators=300).fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
 
-explainer = shap.Explainer(clf)
-shap_values = explainer.shap_values(X_test[:5])
+    print("Random Forest Accuracy: ", metrics.accuracy_score(y_test, y_pred))
 
-feature_names = X_test.columns.values #list the feature names
-label_names = (np.unique(np.array(y))).tolist()
+    explainer = shap.Explainer(clf)
+    shap_values = explainer.shap_values(X_test)
+
+    feature_names = X_test.columns.values #list the feature names
+    label_names = (np.unique(np.array(y))).tolist()
 # for i in range(len(shap_values)):
 #     new_shap = (pd.DataFrame(shap_values[i], columns=feature_names)).agg(['mean', 'std'], axis=0)
 #     u = new_shap
+    return shap_values, feature_names, label_names
 
-new_shap = (pd.DataFrame(np.concatenate(shap_values), columns=feature_names)).round(3)
-lol = len(X_test[:5])
-data_name = [name for name in label_names for i in range(lol)]
-new_shap.insert(0, 'dataset', data_name)
-mean_std = new_shap.groupby('dataset').agg(['mean', 'std'], axis=0)
-#new_shap.insert(0, 'dataset', )
-#new_shap.to_csv("C:/Code/src/Shapely_for_TDA/shapley.csv")
+def mean_shap(X_test, shap_values, feature_names, label_names):
+    new_shap = (pd.DataFrame(np.concatenate(shap_values), columns=feature_names)).round(3)
+    lol = len(X_test[:5])
+    data_name = [name for name in label_names for i in range(lol)]
+    new_shap.insert(0, 'dataset', data_name)
+    mean_std = new_shap.groupby('dataset').agg(['mean', 'std'], axis=0)
+    #new_shap.to_csv("C:/Code/src/Shapely_for_TDA/shapley.csv")
 
 
-feature_loc = [X_test.columns.get_loc(column) for column in feature_names] #obtain the location of the features from the data used in Shape Explainer
+   # feature_loc = [X_test.columns.get_loc(column) for column in feature_names] #obtain the location of the features from the data used in Shap Explainer
 
 #
 #
-mean_ = []
+
 # std_ = []
 # for i in range(len(shap_values)): #obtain a class from the list of shap_values
 #     mean_vals = np.abs(shap_values[i][:, feature_loc]).mean(axis=0) # Compute mean shap values per class
@@ -92,3 +92,7 @@ mean_ = []
 #                              plot_size=(16, 10))
 # fig = shap_values.plot(bar_width = 16)
 # plt.savefig('../../results/figures/shapplot2.png')
+
+if __name__ == '__main__':
+    datapath = "C:/Code/src/Shapely_for_TDA/statistics.csv"
+

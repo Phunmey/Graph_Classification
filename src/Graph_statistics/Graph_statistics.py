@@ -1,10 +1,7 @@
-import random
-import sys
-
 import numpy as np
 import pandas as pd
+import random
 from igraph import *
-import statistics
 
 
 def standardGraphFile(dataset, data_path):
@@ -26,14 +23,14 @@ def standardGraphFile(dataset, data_path):
 
     graph_density = []
     graph_diameter = []
-    clustering_coeff = []
-    spectral_gap_ = []
-    assortativity_ = []
-   # automorphisms_ = []
-    cliques = []
-    motifs = []
-    components = []
-   # chordality_ = []
+   #  clustering_coeff = []
+   #  spectral_gap_ = []
+   #  assortativity_ = []
+   # # automorphisms_ = []
+   #  cliques = []
+   #  motifs = []
+   #  components = []
+   # # chordality_ = []
     for i in unique_graph_indicator:
         train_graph_id = i
         train_id_loc = [index for index, element in enumerate(graph_indicators) if
@@ -44,34 +41,34 @@ def standardGraphFile(dataset, data_path):
                                       weights=True)  # obtain the graph
         Density = train_graph.density() #obtain density
         Diameter = train_graph.diameter() #obtain diameter
-        cluster_coeff = train_graph.transitivity_avglocal_undirected() #obtain transitivity
-        laplacian = train_graph.laplacian() #obtain laplacian matrix
-        laplace_eigenvalue = np.linalg.eig(laplacian)
-        sort_eigenvalue = sorted(np.real(laplace_eigenvalue[0]), reverse=True)
-        spectral_gap = sort_eigenvalue[0]-sort_eigenvalue[1] #obtain spectral gap
-        assortativity = train_graph.assortativity_degree() #obtain assortativity
-       # automorphisms = train_graph.count_automorphisms_vf2() #obtain automorphisms
-        clique_count = train_graph.clique_number() #obtain clique count
-        motifs_count = train_graph.motifs_randesu(size=4) #obtain motif count
-        count_components = len(train_graph.clusters()) #obtain count components
-       # chordality = train_graph.chordality() #is the graph chordal or not
+       #  cluster_coeff = train_graph.transitivity_avglocal_undirected() #obtain transitivity
+       #  laplacian = train_graph.laplacian() #obtain laplacian matrix
+       #  laplace_eigenvalue = np.linalg.eig(laplacian)
+       #  sort_eigenvalue = sorted(np.real(laplace_eigenvalue[0]), reverse=True)
+       #  spectral_gap = sort_eigenvalue[0]-sort_eigenvalue[1] #obtain spectral gap
+       #  assortativity = train_graph.assortativity_degree() #obtain assortativity
+       # # automorphisms = train_graph.count_automorphisms_vf2() #obtain automorphisms
+       #  clique_count = train_graph.clique_number() #obtain clique count
+       #  motifs_count = train_graph.motifs_randesu(size=4) #obtain motif count
+       #  count_components = len(train_graph.clusters()) #obtain count components
+       # # chordality = train_graph.chordality() #is the graph chordal or not
 
         graph_density.append(Density)
         graph_diameter.append(Diameter)
-        clustering_coeff.append(cluster_coeff)
-        spectral_gap_.append(spectral_gap)
-        assortativity_.append(assortativity)
-       # automorphisms_.append(automorphisms)
-        cliques.append(clique_count)
-        motifs.append(str(motifs_count)[1:-1])
-        components.append(count_components)
+       #  clustering_coeff.append(cluster_coeff)
+       #  spectral_gap_.append(spectral_gap)
+       #  assortativity_.append(assortativity)
+       # # automorphisms_.append(automorphisms)
+       #  cliques.append(clique_count)
+       #  motifs.append(str(motifs_count)[1:-1])
+       #  components.append(count_components)
        # chordality_.append(int(chordality))
 
     df = pd.DataFrame(
-        data=zip(graph_density, graph_diameter, clustering_coeff, spectral_gap_, assortativity_, cliques, motifs,
-                 components),
-        columns=['graph_density', 'graph_diameter', 'clustering_coeff', 'laplacian', 'assortativity', 'cliques',
-                 'motifs', 'components'])
+        data=zip(graph_density, graph_diameter),#, clustering_coeff, spectral_gap_, assortativity_, cliques, motifs,
+                # components),
+        columns=['graph_density', 'graph_diameter'])#, 'clustering_coeff', 'laplacian', 'assortativity', 'cliques',
+              #   'motifs', 'components'])
     
     df.insert(0, 'dataset', dataset)
 

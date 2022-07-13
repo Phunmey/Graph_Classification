@@ -1,15 +1,15 @@
-import random
-from datetime import datetime
-from time import time
-
 import gudhi as gd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
+from datetime import datetime
 from igraph import *
 from numpy import inf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
+from time import time
 
 
 def standardGraphFile(dataset, file, data_path, thresh):
@@ -43,6 +43,7 @@ def standardGraphFile(dataset, file, data_path, thresh):
                         element == train_graph_id]  # list the index of the graphid locations
         train_graph_edges = df_edges[df_edges['from'].isin(train_id_loc)]
         train_graph = Graph.TupleList(train_graph_edges.itertuples(index=False), directed=False, weights=True)
+        plot(train_graph)
         train_dist_matrix = np.asarray(Graph.shortest_paths_dijkstra(train_graph))  # obtain distance matrix
         train_dist_matrix[train_dist_matrix == inf] = 0
         # sym_matrix = np.matmul(train_dist_matrix, train_dist_matrix.T)    #obtain a symmetric matrix
@@ -51,10 +52,11 @@ def standardGraphFile(dataset, file, data_path, thresh):
         # train_dim_reduction = MDS(n_components=3, dissimilarity='precomputed').fit_transform(norm_dist_matrix)
         train_alpha_complex = gd.AlphaComplex(points=norm_dist_matrix)
         train_simplex_tree = train_alpha_complex.create_simplex_tree()
-        train_diagrams = np.asarray(train_simplex_tree.persistence(2),
+        train_diagrams = np.asarray(train_simplex_tree.persistence(),
                                     dtype='object')  # used 2 as the dimension because it must be a prime number
-        # gd.plot_persistence_diagram(train_diagrams)
-        # plt.show()
+        plt.clf()
+        gd.plot_persistence_diagram(train_diagrams)
+        plt.show()
 
         # splitting the dimension into 0 and 1
         train_persist_0 = train_diagrams[:, 1][np.where(train_diagrams[:, 0] == 0)]
@@ -172,8 +174,8 @@ def standardGraphFile(dataset, file, data_path, thresh):
 
 if __name__ == '__main__':
     data_path = sys.argv[1]  # dataset path on computer
-    datasets = ('ENZYMES', 'BZR', 'MUTAG', 'PROTEINS', 'DHFR', 'NCI1', 'COX2', 'REDDIT-MULTI-5K', 'REDDIT-MULTI-12K')
-    outputFile = "C:/Code/New_Results/" + 'Alpharesult.csv'
+    datasets = ('MUTAG', 'COX2')
+    outputFile = "C:/Code/results/" + 'Alpharesult.csv'
     file = open(outputFile, 'w')
     for dataset in datasets:
         for threshold in (0.2, 0.5, 0.75, 1):

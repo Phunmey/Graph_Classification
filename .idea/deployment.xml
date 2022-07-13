@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="Narval" remoteFilesAllowedToDisappearOnAutoupload="false" showEqualInSync="true">
+    <serverData>
+      <paths name="Narval">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/projects/def-cakcora/taiwo" local="$PROJECT_DIR$" web="/" />
+            <mapping local="$USER_HOME$/Desktop/Topological-Data/Topological-Data-Analysis-main" />
+            <mapping local="$USER_HOME$/Documents" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

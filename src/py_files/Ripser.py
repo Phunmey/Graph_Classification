@@ -1,16 +1,13 @@
-import random
-import sys
-from datetime import datetime
-from time import time
-
 import numpy as np
 import pandas as pd
+import random
+from datetime import datetime
 from igraph import *
-from numpy import inf
 from ripser import ripser
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
+from time import time
 
 
 def standardGraphFile(dataset, file, data_path, thresh):
@@ -51,8 +48,7 @@ def standardGraphFile(dataset, file, data_path, thresh):
         # train_dist_matrix[train_dist_matrix == inf] = 0
         norm_dist_matrix = train_dist_matrix / np.nanmax(train_dist_matrix[train_dist_matrix != np.inf])
         train_diagrams = ripser(norm_dist_matrix, thresh=thresh, maxdim=1, distance_matrix=True)['dgms']
-        # plot(train_diagrams)
-        # plt.show()
+        #plot_diagrams(train_diagrams, show=True)
 
         # splitting the dimension into 0 and 1
         train_persist_0 = train_diagrams[0]
@@ -162,8 +158,8 @@ def standardGraphFile(dataset, file, data_path, thresh):
 
 if __name__ == '__main__':
     data_path = sys.argv[1]  # dataset path on computer
-    datasets = ('ENZYMES', 'BZR')
-    outputFile = "../../results/" + 'rippy.csv'
+    datasets = ('BZR','ENZYMES')
+    outputFile = "../../results/" + 'rippyish.csv'
     file = open(outputFile, 'w')
     for dataset in datasets:
         for threshold in [1]:

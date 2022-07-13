@@ -1,14 +1,13 @@
-import random
-from datetime import datetime
-from time import time
-
 import numpy as np
 import pandas as pd
+import random
+from datetime import datetime
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from igraph import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split, GridSearchCV
+from time import time
 
 
 def standardGraphFile(dataset, file, data_path, iter):
@@ -92,7 +91,7 @@ def standardGraphFile(dataset, file, data_path, iter):
     t3 = time()
     print(f'Ripser took {time_taken} seconds, training took {t3 - t2} seconds')
     flat_conf_mat = (str(conf_mat.flatten(order='C')))[1:-1]
-    file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 - t2) +
+    file.write(dataset + "\t" + str(time_taken) + "\t" + str(t3 -   t2) +
                "\t" + str(accuracy) + "\t" + str(auc) +
                "\t" + str(iter) + "\t" + str(flat_conf_mat) + "\n")
     file.flush()

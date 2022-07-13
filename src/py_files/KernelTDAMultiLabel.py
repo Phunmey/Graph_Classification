@@ -1,15 +1,14 @@
-import random
-from datetime import datetime
-from time import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
+from datetime import datetime
 from grakel.kernels import WeisfeilerLehman, VertexHistogram
 from igraph import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
+from time import time
 
 
 def standardGraphFile(dataset, file, datapath, h_filt, iter, filtration, max_allowed_filtration):
@@ -231,7 +230,7 @@ if __name__ == '__main__':
     datapath = sys.argv[1]  # dataset path on computer such as  "C:/data"
     datasets = (
         "ENZYMES", "REDDIT-MULTI-5K", "REDDIT-MULTI-12K", 'BZR', 'MUTAG', 'DD', 'PROTEINS', 'DHFR', 'NCI1', 'COX2')
-    outputFile = "../results/" + 'MultilabelResults.csv'
+    outputFile = "../../results/" + 'MultilabelResults.csv'
     output_file = open(outputFile, 'w')
     for dataset_name in datasets:
         for filtr_type in ('superlevel', 'sublevel'):
